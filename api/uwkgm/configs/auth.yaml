@@ -1,0 +1,4 @@
+apis:
+  - name: "{{core.api.name}}"
+    title: "{{core.api.title}}"
+    description: "{{core.api.description}}"

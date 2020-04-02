@@ -1,0 +1,12 @@
+integration:
+  map:
+    entities:
+      dbpedia:
+        endpoint: http://model.dbpedia-spotlight.org/en/annotate
+        confidence: 0.5
+
+verification:
+  verify:
+    agreement:
+      dbpedia:
+        endpoint: http://dbpedia.org/sparql

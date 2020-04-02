@@ -1,0 +1,23 @@
+development:
+  java:
+    address: http://localhost:8080
+
+"development:ext":
+  java:
+    address: "{{$env('name': 'UWKGM_EXT_HOST')}}/spring"
+
+pre-release:
+  java:
+    address: http://uwkgm-spring-service
+
+production:
+  java:
+    address: http://uwkgm-spring-service
+
+"pre-release:ext":
+  java:
+    address: http://uwkgm-spring-service
+
+"production:ext":
+  java:
+    address: http://uwkgm-spring-service

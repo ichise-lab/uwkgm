@@ -1,0 +1,5 @@
+*.idea
+/api/dorest/dorest/notes
+/api/uwkgm/accounts/migrations
+/api/uwkgm/dev
+/api/uwkgm/local
