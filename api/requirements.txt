@@ -4,7 +4,7 @@ catalogue==0.0.8
 certifi==2019.11.28
 cffi==1.14.0
 chardet==3.0.4
-cryptography==2.8
+cryptography==3.2
 cymem==2.0.3
 Django==3.0.3
 django-cors-headers==3.2.1
