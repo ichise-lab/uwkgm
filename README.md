@@ -4,6 +4,24 @@ If any of your projects involve creating, maintaining, or utilizing knowledge gr
 * *Researchers.* Easily acquire, store, access, and expand your knowledge graph, as well as streamline research procedures with our research toolkit.
 * *Developers and end-users.* As an open-source project, you can customize, scale, and extend the UWKGM platform to fit your needs, while also control who gets access to your data and tools.
 
+### Demonstration
+Demonstration and sample use cases are available at this [link](https://sites.google.com/view/uwkgm-platform/home)
+
+Visit [our website](https://uwkgm.airc.aist.go.jp/home) for live demo. (Currently, we do not allow a user to create a new account on the website due to the resource management problem. Please contact us, if you would like to get a tester account)
+
+
+### Citation
+If you find this code useful in your research, please consider citing the following [paper](https://doi.org/10.1145/3340531.3417441):
+```
+@inproceedings{uwkgm, 
+author = {Kertkeidkachorn, Natthawut and Nararatwong, Rungsiman and Ichise, Ryutaro}, 
+title = {UWKGM: A Modular Platform for Knowledge Graph Management}, 
+booktitle = {Proceedings of the 29th ACM International Conference on Information & Knowledge Management}, 
+pages = {3421–3424}, 
+year = {2020}}
+```
+
+
 ## Getting Started
 **Full explanation and setup instruction are provided in the manual.**
 
