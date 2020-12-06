@@ -1,0 +1,3 @@
+#!/bin/bash
+
+export UWKGM_KUBE_HOST_PATH=/data/uwkgm

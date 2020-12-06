@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ "$(uname -a)" == *"Darwin"* ]]; then
+    UWKGM_OS_BASE="darwin"
+elif [[ "$(uname -a)" == *"Linux"* ]]; then
+    UWKGM_OS_BASE="linux"
+fi

@@ -1,4 +1,0 @@
-#!/bin/bash
-
-export UWKGM_PMA_VERSION=4
-export UWKGM_PMA_ABSOLUTE_URI=$UWKGM_ABSOLUTE_HOST/mysql/

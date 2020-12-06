@@ -1,0 +1,67 @@
+#!/bin/bash
+
+source bin/conf
+source bin/libs/secure
+source bin/packages
+source conf/base
+source conf/databases
+
+manage.run() {
+    while true;
+    do
+        CHOICES=(
+            "API server"
+            "UI server"
+        )
+
+        VALUES=(
+            api
+            ui
+        )
+
+        args.pull OPERATION
+        inputs.choices OPERATION "Run Server" "Choose server to run" "api" "$OPERATION" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $OPERATION == "api" ]]; then
+            manage.run.api
+        elif [[ $OPERATION == "ui" ]]; then
+            manage.run.ui
+        elif [[ $OPERATION == "cancel" ]]; then
+            return
+        fi
+    done
+}
+
+manage.run.api() {
+    secure.password.master
+    manage.conf.secure.load "conf/$UWKGM_ENV.secrets.enc"
+    manage.packages.site.run
+
+    source api/env/bin/activate
+
+    echo "[UWKGM: INFO] Preparing the API server..."
+
+    export UWKGM_API_STATE=migrating
+    python3 api/uwkgm/manage.py makemigrations accounts
+    python3 api/uwkgm/manage.py makemigrations
+    python3 api/uwkgm/manage.py migrate
+
+    echo ""
+    echo "[UWKGM: INFO] Starting the API server..."
+
+    export UWKGM_API_STATE=running
+    export DOREST_VERBOSE=true
+    python3 api/uwkgm/manage.py runserver 0.0.0.0:8001
+}
+
+manage.run.ui() {
+    export HOST=0.0.0.0
+    export PORT=8000
+    export REACT_APP_ENV=$UWKGM_ENV
+    export REACT_APP_UI_VERSION=$UWKGM_UI_VERSION
+    export REACT_APP_API_VERSION=$UWKGM_API_VERSION
+    export REACT_APP_API_ENDPOINT=$UWKGM_API_ENDPOINT
+    export REACT_APP_AUTH_ENDPOINT=$UWKGM_AUTH_ENDPOINT
+
+    npm start --prefix ui/uwkgm
+}

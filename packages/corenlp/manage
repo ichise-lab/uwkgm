@@ -1,0 +1,38 @@
+#!/bin/bash
+
+source bin/libs/args
+source bin/libs/inputs
+source packages/corenlp/bin/install
+source packages/corenlp/bin/run
+source packages/corenlp/package
+
+packages.corenlp.manage() {
+    rm -r -f packages/corenlp/temp
+    
+    while true;
+    do
+        CHOICES=(
+            "Run"
+            "Install"
+        )
+
+        VALUES=(
+            run
+            install
+        )
+
+        echo "[UWKGM: INFO] Stanford CoreNLP server version $UWKGM_PKG_CORENLP_VERSION"
+
+        args.pull OPERATION
+        inputs.choices OPERATION "CoreNLP Operation" "Choose operation for CoreNLP" "run" "$OPERATION" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $OPERATION == "run" ]]; then
+            packages.corenlp.run
+        elif [[ $OPERATION == "install" ]]; then
+            packages.corenlp.install
+        elif [[ $OPERATION == "cancel" ]]; then
+            rm -r -f packages/corenlp/temp
+            return
+        fi
+    done
+}

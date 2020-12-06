@@ -1,0 +1,51 @@
+#!/bin/bash
+
+packages.virtuoso.import() {
+    while true;
+    do
+        CHOICES=(
+            "Kubernetes cluster"
+        )
+
+        VALUES=(
+            kube
+        )
+
+        args.pull IMPORT
+        inputs.choices IMPORT "Virtuoso Import" "Choose your deployment of Virtuoso" "kube" "$IMPORT" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $IMPORT == "kube" ]]; then
+            packages.virtuoso.import.kube
+        elif [[ $IMPORT == "cancel" ]]; then
+            return
+        fi
+    done
+}
+
+packages.virtuoso.import.kube() {
+    rm -r -f packages/virtuoso/temp
+    mkdir -p packages/virtuoso/temp
+    mkdir -p $UWKGM_PKG_VIRTUOSO_HOST_EXT_PATH
+
+    echo "[UWKGM: INFO] To import data into Virtuoso, paste .owl, .nt, or .ttl files in '$UWKGM_PKG_VIRTUOSO_HOST_EXT_PATH'."
+    echo "IMPORTANT: The import module will not read files in subdirectories."
+
+    while [[ $UWKGM_PKG_VIRTUOSO_IMPORT_GRAPH == "" ]];
+    do
+        read -r -p "Type the target graph URI: " UWKGM_PKG_VIRTUOSO_IMPORT_GRAPH
+
+        if [[ $UWKGM_PKG_VIRTUOSO_IMPORT_GRAPH == "" ]]; then
+            echo "[UWKGM: ERROR] Graph URI cannot be emptty."
+        fi
+
+        echo ""
+    done
+
+    cp packages/virtuoso/templates/import.sql.template packages/virtuoso/temp/import.sql
+    files.text.replace "{{UWKGM_PKG_VIRTUOSO_IMPORT_GRAPH}}" "UWKGM_PKG_VIRTUOSO_IMPORT_GRAPH" packages/virtuoso/temp/import.sql
+
+    SQL=$(cat packages/virtuoso/temp/import.sql);
+    kubectl run -it --rm --image=tenforce/virtuoso:$UWKGM_PKG_VIRTUOSO_DOCKER_VERSION --restart=Never virtuoso-client -- /usr/local/virtuoso-opensource/bin/isql-v uwkgm-virtuoso-service:1111 dba "$UWKGM_PKG_VIRTUOSO_PASSWORD" "EXEC=$SQL"
+
+    rm -r -f packages/virtuoso/temp
+}

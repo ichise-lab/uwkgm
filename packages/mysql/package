@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export UWKGM_PKG_MYSQL_TITLE="MySQL"
+export UWKGM_PKG_MYSQL_VERSION=8.0.19
+export UWKGM_PKG_MYSQL_DESCRIPTION="MySQL Community Edition"

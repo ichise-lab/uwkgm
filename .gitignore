@@ -1,5 +1,20 @@
-*.idea
-/api/dorest/dorest/notes
-/api/uwkgm/accounts/migrations
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Django:
+*.log
+*.pot
+
+.DS_Store
+.idea
+/api/env
 /api/uwkgm/dev
-/api/uwkgm/local
+/api/uwkgm/private
+/api/end2end_neural_el
+/conf
+/dev
+/notes
+/private
+/temp
+/ui/uwkgm/node_modules

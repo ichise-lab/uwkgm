@@ -1,8 +1,0 @@
-api:
-  name: uwkgm
-  title: UWKGM
-  domain: org
-  description: The UWKGM Project
-
-email:
-  domain: "{{core.api.name}}.{{core.api.domain}}"

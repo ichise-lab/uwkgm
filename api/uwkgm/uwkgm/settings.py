@@ -12,36 +12,20 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 from datetime import timedelta
 
-from uwkgm import envyml
-from private import rsa
+from uwkgm import rsa
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Dorest
-
-DOREST = {
-    'CONFIGS': {
-        'PATH': '%s/configs' % BASE_DIR,
-        'DATABASE': 'database.yaml'
-    },
-    'ENV': {
-        'PATH': '%s/env' % BASE_DIR,
-        'NAME': 'UWKGM_ENV'
-    },
-    'DEFAULT_THROTTLE_CLASSES': [
-        'accounts.rest.throttling.UserScopedRateThrottle',
-    ]
-}
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['UWKGM_DJANGO_SECRET_KEY']
+TMP_SECRET_KEY = "5n7u9a_$@r1wbii&ioivkyn#6ay_*7rlhcbqgysc9h*1k#aa%q"
+SECRET_KEY = os.environ['UWKGM_DJANGO_SECRET_KEY'] if 'UWKGM_DJANGO_SECRET_KEY' in os.environ else TMP_SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = 'production' not in os.environ[DOREST['ENV']['NAME']]
+DEBUG = ('dev' in os.environ['UWKGM_ENV']) if 'UWKGM_ENV' in os.environ else True
 
 ALLOWED_HOSTS = ['*']
 
@@ -61,8 +45,7 @@ INSTALLED_APPS = [
     'corsheaders',
 
     # Local apps
-    'accounts.apps.AccountsConfig',
-    'knowledge.apps.KnowledgeConfig'
+    'accounts.apps.AccountsConfig'
 ]
 
 MIDDLEWARE = [
@@ -114,10 +97,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'UWKGM',
-        'USER': os.environ['UWKGM_MYSQL_USERNAME'],
-        'PASSWORD': os.environ['UWKGM_MYSQL_PASSWORD'],
-        'HOST': envyml(DOREST['ENV']['NAME'], BASE_DIR, 'database.mysql.address'),
-        'PORT': envyml(DOREST['ENV']['NAME'], BASE_DIR, 'database.mysql.port'),
+        'USER': os.environ['UWKGM_DB_DJANGO_USERNAME'] if 'UWKGM_DB_DJANGO_USERNAME' in os.environ else '',
+        'PASSWORD': os.environ['UWKGM_DB_DJANGO_PASSWORD'] if 'UWKGM_DB_DJANGO_PASSWORD' in os.environ else '',
+        'HOST': os.environ['UWKGM_DB_DJANGO_ADDRESS'] if 'UWKGM_DB_DJANGO_ADDRESS' in os.environ else 'localhost',
+        'PORT': os.environ['UWKGM_DB_DJANGO_PORT'] if 'UWKGM_DB_DJANGO_PORT' in os.environ else 3306
     }
 }
 
@@ -199,6 +182,18 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+
+# Dorest
+
+DOREST = {
+    'CONFIGS': {
+        'PATH': '%s/conf' % BASE_DIR
+    },
+    'DEFAULT_THROTTLE_CLASSES': [
+        'accounts.throttling.UserScopedRateThrottle',
+    ]
+}
 
 
 # Internationalization

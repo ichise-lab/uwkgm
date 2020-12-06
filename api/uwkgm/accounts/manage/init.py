@@ -10,12 +10,12 @@ import re
 import yaml
 from typing import Any, Dict
 
+from django.conf import settings
 from django.contrib.auth.models import Group, Permission
 from django.db.utils import IntegrityError
 
-from dorest import configs
-from dorest.libs.django.exceptions import ObjectNotFound
-from dorest.libs.sh import verbose
+from dorest import conf, verbose
+from dorest.exceptions import ObjectNotFound
 
 from accounts.models import CustomUser
 
@@ -34,7 +34,7 @@ def superusers(clean: bool = False, replace: bool = False, ignore_errors: bool =
         CustomUser.objects.filter(is_superuser=True).delete()
 
     user_list = dict()
-    for user_config in configs.resolve('accounts.init.superusers'):
+    for user_config in conf.resolve('accounts.init.superusers'):
         try:
             if replace:
                 try:
@@ -69,8 +69,8 @@ def users(replace: bool = False, ignore_errors: bool = False) -> Dict[str, str]:
     """
 
     user_list = dict()
-    if 'users' in configs.resolve('accounts.init'):
-        for user_config in configs.resolve('accounts.init.users'):
+    if 'users' in conf.resolve('accounts.init'):
+        for user_config in conf.resolve('accounts.init.users'):
             try:
                 if replace:
                     try:
@@ -90,6 +90,7 @@ def users(replace: bool = False, ignore_errors: bool = False) -> Dict[str, str]:
                     user.user_permissions.set([Permission.objects.get(codename=p) for p in user_config['permissions']])
 
                 [setattr(user, k, v) for k, v in user_config.items() if k not in ('username', 'password', 'email', 'groups', 'permissions')]
+                setattr(user, 'is_active', True)
 
                 user.save()
                 user_list[user_config['email']] = user_config['password']
@@ -117,7 +118,7 @@ def _users_output(email_password: dict, file_prefix: str) -> None:
         verbose.success('Initialized the following users:')
         [verbose.info.append('  %s (password=%s)' % (u, p)) for u, p in email_password.items()]
 
-        local_dir = configs.resolve('accounts.init.output.path')
+        local_dir = '%s/%s' % (settings.BASE_DIR, conf.resolve('accounts.init.output.path'))
 
         if not os.path.exists(local_dir):
             os.makedirs(local_dir)
@@ -145,7 +146,7 @@ def groups(clean: bool = False) -> Dict[str, Any]:
     if clean:
         Group.objects.all().delete()
 
-    group_configs = configs.resolve('accounts.groups')
+    group_configs = conf.resolve('accounts.groups')
 
     for key, value in group_configs.items():
         group = Group.objects.get_or_create(name=key)[0]
@@ -155,4 +156,4 @@ def groups(clean: bool = False) -> Dict[str, Any]:
 
         group.save()
 
-    return configs.resolve('accounts.groups')
+    return conf.resolve('accounts.groups')

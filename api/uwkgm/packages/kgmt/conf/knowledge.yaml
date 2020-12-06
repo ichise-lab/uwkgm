@@ -1,0 +1,6 @@
+integration:
+  map:
+    entities:
+      dbpedia:
+        address: https://api.dbpedia-spotlight.org/en/annotate
+        confidence: 0.5

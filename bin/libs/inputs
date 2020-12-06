@@ -1,0 +1,204 @@
+#!/bin/bash
+
+source bin/libs/args
+source bin/libs/formats
+
+inputs.choices() {
+    CHOICE_ARRAY=("$@")
+    CHOICE_VAR="$1"
+    CHOICE_TITLE="$2"
+    CHOICE_MESSAGE="$3"
+    CHOICE_DEFAULT="$4"
+    CHOICE_ARG="$5"
+    CHOICE_N_FIXED_PARAMS=5
+    CHOICE_N_CHOICES=$(((${#CHOICE_ARRAY[@]} - $CHOICE_N_FIXED_PARAMS) / 2))
+    CHOICE_DEFAULT_INDEX=1
+    CHOICE_CHOICES=()
+    CHOICE_VALUES=()
+
+    for CHOICE_I in $(seq $CHOICE_N_FIXED_PARAMS $((CHOICE_N_FIXED_PARAMS + CHOICE_N_CHOICES - 1)));
+    do
+        CHOICE_CHOICES+=("${CHOICE_ARRAY[CHOICE_I]}")
+    done
+
+    for CHOICE_I in $(seq $((CHOICE_N_FIXED_PARAMS + CHOICE_N_CHOICES)) $((${#CHOICE_ARRAY[@]} - 1)));
+    do
+        CHOICE_VALUES+=("${CHOICE_ARRAY[CHOICE_I]}")
+    done
+
+    for CHOICE_I in $(seq 0 $((${#CHOICE_VALUES[@]} - 1)));
+    do
+        if [[ "$CHOICE_DEFAULT" == "${CHOICE_VALUES[CHOICE_I]}" ]]; then
+            CHOICE_DEFAULT_INDEX=$((CHOICE_I + 1))
+        fi
+    done
+
+    if [[ $CHOICE_ARG == "" ]]; then
+        echo "[UWKGM: INPUT] $CHOICE_MESSAGE:"
+
+        for CHOICE_I in $(seq 0 $((CHOICE_N_CHOICES - 1)));
+        do
+            CHOICE_OUTPUT="  ["
+
+            if [[ ${#CHOICE_CHOICES[@]} -ge 10 && $CHOICE_I -le 9 ]]; then
+                CHOICE_OUTPUT+=" "
+            fi
+
+            CHOICE_OUTPUT+="$((CHOICE_I + 1))]"
+
+            if [[ "${CHOICE_VALUES[CHOICE_I]}" == "$CHOICE_DEFAULT" ]]; then
+                CHOICE_OUTPUT+="* "
+            else
+                CHOICE_OUTPUT+="  "
+            fi
+
+            formats.align.left CHOICE_CMD "${CHOICE_VALUES[CHOICE_I]}" 11
+            CHOICE_OUTPUT+="$CHOICE_CMD ${CHOICE_CHOICES[CHOICE_I]}"
+            echo "$CHOICE_OUTPUT"
+        done
+
+        if [[ ${#CHOICE_CHOICES[@]} -le 10 ]]; then
+            echo "  [0]  cancel       Cancel"
+        else
+            echo "  [ 0]  cancel       Cancel"
+        fi
+
+        while true;
+        do
+            read -r -p "Type your choice number or press Enter/Return to choose default option: " BIN_INPUT
+
+            if [[ $BIN_INPUT == "" ]]; then
+                eval "$CHOICE_VAR=${CHOICE_VALUES[CHOICE_DEFAULT_INDEX - 1]}"
+                echo "[UWKGM: INFO] Selected: ${CHOICE_CHOICES[CHOICE_DEFAULT_INDEX - 1]}"
+                echo ""
+                return
+            elif [[ $BIN_INPUT == 0 ]]; then
+                eval "$CHOICE_VAR=cancel"
+                echo "[UWKGM: INFO] Selected: Cancel"
+                echo ""
+                return
+            elif [[ $BIN_INPUT -ge 1 && $BIN_INPUT -le ${#CHOICE_CHOICES[@]} ]]; then
+                eval "$CHOICE_VAR=${CHOICE_VALUES[BIN_INPUT - 1]}"
+                echo "[UWKGM: INFO] Selected: ${CHOICE_CHOICES[BIN_INPUT - 1]}"
+                echo ""
+                return
+            else
+                echo "[UWKGM: ERROR] Invalid choice."
+                echo ""
+            fi
+        done
+    else
+        for i in $(seq 0 $((${#CHOICE_VALUES[@]} - 1)));
+        do
+            if [[ "$CHOICE_ARG" == "${CHOICE_VALUES[i]}" ]]; then
+                eval "$CHOICE_VAR=${CHOICE_VALUES[i]}"
+                echo "[UWKGM: INFO] $CHOICE_TITLE: ${CHOICE_CHOICES[i]}"
+                echo ""
+                return
+           fi
+        done
+
+        echo "[UWKGM: ERROR] Invalid parameter \"$CHOICE_ARG\" for \"$CHOICE_TITLE\""
+        echo "[UWKGM: INFO] Choices are:"
+
+        for i in $(seq 0 $(($CHOICE_N_CHOICES - 1)));
+        do
+            if [[ ${#CHOICE_VALUES[i]} -le 10 ]]; then
+                BIN_SPACES=
+
+                for s in $(seq 0 $((10 - ${#CHOICE_VALUES[i]})));
+                do
+                    BIN_SPACES+=" "
+                done
+
+                echo "  ${CHOICE_VALUES[i]}$BIN_SPACES ${CHOICE_CHOICES[i]}"
+            else
+                echo "  ${CHOICE_VALUES[i]}"
+                echo "              ${CHOICE_CHOICES[i]}"
+            fi
+        done
+
+        echo "[UWKGM: INFO] Terminating the manager."
+        exit
+    fi
+}
+
+inputs.kwargs() {
+    KWARG_MESSAGE="$1"
+
+    echo "[UWKGM: INPUT] $KWARG_MESSAGE:"
+    echo "Type optional parameters or press Enter/Return to skip:"
+    read -r -p "$ " KWARGS_INPUT
+}
+
+inputs.confirm.enter() {
+    if [[ $1 == "" ]]; then
+        read -r -p "[UWKGM: INPUT] Press Enter/Return to continue: " BIN_INPUT
+    else
+        read -r -p "[UWKGM: INPUT] $1: " BIN_INPUT
+    fi
+}
+
+inputs.confirm.yesno() {
+    while true;
+    do
+        if [[ $1 == "" ]]; then
+            read -r -p "[UWKGM: INPUT] Type y/n to continue: " YN_INPUT
+        else
+            read -r -p "[UWKGM: INPUT] $1 [y/n]: " YN_INPUT
+        fi
+
+        if [[ $YN_INPUT == 'y' || $YN_INPUT == 'Y' ]]; then
+            return 0
+        elif [[ $YN_INPUT == 'n' || $YN_INPUT == 'N' ]]; then
+            return 1
+        else
+            echo "[UWKGM: ERROR] Invalid choice."
+        fi
+    done
+}
+
+inputs.text() {
+    TEXT_PARAMS=("$@")
+    TEXT_MESSAGE="$1"
+    TEXT_VAR="$2"
+    TEXT_NON_EMPTY=false
+    TEXT_HAS_DEFAULT=false
+
+    for i in $(seq 0 $((${#TEXT_PARAMS[@]} - 1)));
+    do
+        if [[ ${TEXT_PARAMS[i]} == "--non-empty" ]]; then
+            TEXT_NON_EMPTY=true
+
+        elif [[ ${TEXT_PARAMS[i]} == "--default" ]]; then
+            TEXT_HAS_DEFAULT=true
+            TEXT_DEFAULT_INPUT="${TEXT_PARAMS[i+1]}"
+        fi
+    done
+
+    while true;
+    do
+        if [[ $TEXT_HAS_DEFAULT == true ]]; then
+            read -r -p "[UWKGM: INPUT] $TEXT_MESSAGE [Press Enter to skip]: " TEXT_INPUT
+        else
+            read -r -p "[UWKGM: INPUT] $TEXT_MESSAGE: " TEXT_INPUT
+        fi
+
+        if [[ $TEXT_HAS_DEFAULT == true ]]; then
+            if [[ $TEXT_INPUT == "" ]]; then
+                eval "$TEXT_VAR=\"$TEXT_DEFAULT_INPUT\""
+            else
+                eval "$TEXT_VAR=\"$TEXT_INPUT\""
+            fi
+            return
+
+        elif [[ $TEXT_NON_EMPTY == true && $TEXT_INPUT == "" ]]; then
+            echo "[UWKGM: ERROR] The input cannot be empty."
+
+        else
+            eval "$TEXT_VAR=\"$TEXT_INPUT\""
+            return
+
+        fi
+    done
+}

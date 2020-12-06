@@ -1,0 +1,76 @@
+#!/bin/bash
+
+source bin/conf
+source bin/env
+source bin/install
+source bin/intro
+source bin/libs/args
+source bin/libs/inputs
+source bin/packages
+source bin/run
+source package
+
+manage() {
+    mkdir -p private
+    rm -r -f temp
+
+    args.auto
+    args.kwargs.get UWKGM_MASTER_PASSWORD "--uwkgm.password"
+
+    if [[ $UWKGM_INTERACTIVE == true ]]; then
+        manage.intro
+    fi
+
+    while true;
+    do
+        args.pull UWKGM_ENV
+        manage.env.choose
+
+        if [[ $UWKGM_ENV == "dev" || $UWKGM_ENV == "prod" ]]; then
+            manage.local
+        elif [[ $UWKGM_ENV == "cancel" ]]; then
+            echo "[UWKGM: INFO] Bye."
+            return
+        fi
+    done
+}
+
+manage.local()
+{
+    while true;
+    do
+        CHOICES=(
+            "Run API/UI server"
+            "Set up and install API/UI server"
+            "Update configurations"
+            "Manage packages"
+            "Display current environment"
+        )
+
+        VALUES=(
+            run
+            install
+            config
+            pkg
+            env
+        )
+
+        args.pull OPERATION
+        inputs.choices OPERATION "Main Operation" "Choose operation" "run" "$OPERATION" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $OPERATION == "run" ]]; then
+            manage.run
+        elif [[ $OPERATION == "install" ]]; then
+            manage.install
+        elif [[ $OPERATION == "config" ]]; then
+            manage.conf
+        elif [[ $OPERATION == "pkg" ]]; then
+            manage.packages
+        elif [[ $OPERATION == "env" ]]; then
+            echo "[UWKGM: INFO] Current environment: $UWKGM_ENV"
+            echo ""
+        elif [[ $OPERATION == "cancel" ]]; then
+            return
+        fi
+    done
+}

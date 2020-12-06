@@ -1,0 +1,72 @@
+names:
+  reserved:
+    - uwkgm
+    - groups
+    - permissions
+    - throttles
+    - password
+
+fields:
+  full:
+    exclude:
+      - id
+      - password
+
+  limited:
+    exclude:
+      - id
+      - is_email_verified
+      - is_active
+      - is_staff
+      - is_superuser
+      - password
+
+    read_only:
+      - username
+      - last_login
+      - date_joined
+      - groups
+      - user_permissions
+
+groups:
+  system:
+    title: Server components
+
+  user_trusted:
+    title: Trusted user
+    description: Not subject to rate limits; can issue modifiers and commit changes
+
+  user_regular:
+    title: Regular user
+    description: Subject to rate limits; can issue modifiers but cannot commit changes
+
+  user_readonly:
+    title: Regular user with read-only permissions
+    description: Subject to rate limits and read-only policy
+
+  user_demo:
+    title: Demo user
+    description: Shared account only for demonstration
+
+registration:
+  email: register@uwkgm.com
+
+  activation:
+    subject: Activation Code for the UWKGM Platform Registration
+    template: templates/emails/activation.html
+
+init:
+  superusers:
+    - username: root
+      password: password
+      email: root@uwkgm.com
+
+  users:
+    - username: demo
+      password: password
+      email: demo@uwkgm.com
+      groups:
+        - user_demo
+
+  output:
+    path: private/accounts/passwords

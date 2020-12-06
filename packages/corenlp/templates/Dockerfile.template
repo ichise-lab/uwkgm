@@ -1,0 +1,7 @@
+FROM maven
+COPY payload /corenlp
+
+WORKDIR /corenlp
+RUN mvn package
+
+CMD java -jar /corenlp/target/uwkgm-corenlp-{{UWKGM_PKG_CORENLP_VERSION}}.jar --server.port={{UWKGM_PKG_CORENLP_PORT}}

@@ -13,15 +13,15 @@ from accounts.models import CustomUser, ThrottleBurstPermit, ThrottleBurstReques
 
 
 class ThrottleBurstRequestAdmin(admin.ModelAdmin):
-    list_display = ['user', 'api', 'name', 'limit', 'duration', 'start', 'expire']
+    list_display = ['user', 'name', 'limit', 'duration', 'start', 'expire']
     search_fields = ['user__username']
-    list_filter = ['api', 'name']
+    list_filter = ['name']
 
 
 class ThrottleBurstPermitAdmin(admin.ModelAdmin):
-    list_display = ['user', 'api', 'name', 'limit', 'duration', 'start', 'expire', 'granter', 'request']
+    list_display = ['user', 'name', 'limit', 'duration', 'start', 'expire', 'granter', 'request']
     search_fields = ['user__username', 'granter__username']
-    list_filter = ['api', 'name', 'granter']
+    list_filter = ['name', 'granter']
 
 
 class ThrottleExpansionRequestInline(admin.TabularInline):
@@ -33,7 +33,8 @@ class CustomUserAdmin(UserAdmin):
     model = CustomUser
     list_display = ['username', 'email', 'first_name', 'last_name']
 
-    fieldsets = UserAdmin.fieldsets + (('Identification', {'fields': (('is_email_verified'),)}),
+    fieldsets = UserAdmin.fieldsets + (('Identification', {'fields': (('is_email_verified',),)}),
+                                       ('Registration', {'fields': (('registered', 'registration_code'),)}),
                                        ('Additional information', {'fields': ()}))
     inlines = [ThrottleExpansionRequestInline]
 

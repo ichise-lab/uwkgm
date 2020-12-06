@@ -1,0 +1,126 @@
+#!/bin/bash
+
+source bin/libs/args
+source bin/libs/inputs
+source bin/libs/secure
+source packages/mysql/bin/servers
+
+packages.mysql.setup() {
+    while true;
+    do
+        CHOICES=(
+            "Local"
+            "Docker"
+        )
+
+        VALUES=(
+            local_db
+            docker
+        )
+
+        args.pull SETUP
+        inputs.choices SETUP "Set up MySQL" "Choose set up location" "local" "$SETUP" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $SETUP == "local_db" ]]; then
+            packages.mysql.setup.local
+        elif [[ $SETUP == "docker" ]]; then
+            packages.mysql.setup.docker
+        elif [[ $SETUP == "cancel" ]]; then
+            return
+        fi
+    done
+}
+
+packages.mysql.setup.local() {
+    while true;
+    do
+        CHOICES=(
+            "Create UWKGM database"
+            "Set root user's password"
+        )
+
+        VALUES=(
+            create_db
+            root_pwd
+        )
+
+        args.pull SETUP
+        inputs.choices SETUP "Set up MySQL" "Choose set up operation" "create_db" "$SETUP" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $SETUP == "create_db" ]]; then
+            packages.mysql.setup.local.create_db
+        elif [[ $SETUP == "root_pwd" ]]; then
+            packages.mysql.setup.local.root_pwd
+        elif [[ $SETUP == "cancel" ]]; then
+            return
+        fi
+    done
+}
+
+packages.mysql.setup.local.create_db() {
+    SQL_CREATE_DB="CREATE DATABASE IF NOT EXISTS UWKGM CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+    packages.mysql.servers.local.execute "$SQL_CREATE_DB"
+    packages.mysql.servers.local.execute "SHOW DATABASES;"
+
+    echo "[UWKGM: INFO] Executed database-creation command."
+    echo ""
+}
+
+packages.mysql.setup.local.root_pwd() {
+    secure.password.master
+    manage.conf.secure.load "conf/$UWKGM_ENV.secrets.enc"
+
+    SQL_ROOT_PWD="ALTER USER root@localhost IDENTIFIED WITH mysql_native_password BY '$UWKGM_DB_DJANGO_PASSWORD';"
+    packages.mysql.servers.local.execute "$SQL_ROOT_PWD"
+
+    echo "[UWKGM: INFO] Executed password-chanage command for root user."
+    echo ""
+}
+
+packages.mysql.setup.docker() {
+    while true;
+    do
+        CHOICES=(
+            "Create MySQL user with all permissions"
+            "Create UWKGM database"
+        )
+
+        VALUES=(
+            create_user
+            create_db
+        )
+
+        args.pull OPR
+        inputs.choices OPR "Set up MySQL" "Choose set up operation" "create_user" "$OPR" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $OPR == "create_user" ]]; then
+            packages.mysql.setup.docker.user
+        elif [[ $OPR == "create_db" ]]; then
+            packages.mysql.setup.docker.db
+        elif [[ $OPR == "cancel" ]]; then
+            return
+        fi
+    done
+}
+
+packages.mysql.setup.docker.user() {
+    secure.password.master
+    manage.conf.secure.load "conf/$UWKGM_ENV.secrets.enc"
+
+    CMD="CREATE USER '$UWKGM_DB_DJANGO_USERNAME'@'%' IDENTIFIED BY '$UWKGM_DB_DJANGO_PASSWORD'; GRANT ALL ON *.* TO '$UWKGM_DB_DJANGO_USERNAME'@'%';"
+    sudo docker exec -it uwkgm-mysql mysql -uroot --password=="$UWKGM_DB_DJANGO_ROOT_PASSWORD" -e "$CMD"
+
+    echo "[UWKGM: INFO] Executed user-creation command."
+    echo ""
+}
+
+packages.mysql.setup.docker.db() {
+    secure.password.master
+    manage.conf.secure.load "conf/$UWKGM_ENV.secrets.enc"
+
+    packages.mysql.servers.docker.execute "CREATE DATABASE UWKGM CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+    echo "[UWKGM: INFO] Executed database-creation command."
+    echo ""
+}

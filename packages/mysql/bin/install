@@ -1,0 +1,62 @@
+#!/bin/bash
+
+source bin/libs/args
+source bin/libs/inputs
+source bin/libs/files
+source packages/mysql/package
+
+packages.mysql.install() {
+    while true;
+    do
+        CHOICES=(
+            "Deploy MySQL in a Kubernetes cluster"
+            "Deploy phpMyAdmin in a Kubernetes cluster"
+        )
+
+        VALUES=(
+            kube
+            pma
+        )
+
+        args.pull INSTALL
+        inputs.choices INSTALL "Install MySQL" "Choose installation" "kube" "$INSTALL" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $INSTALL == "kube" ]]; then
+            packages.mysql.install.kube
+        elif [[ $INSTALL == "pma" ]]; then
+            packages.mysql.install.pma.kube
+        elif [[ $INSTALL == "cancel" ]]; then
+            return
+        fi
+    done
+}
+
+packages.mysql.install.kube() {
+    rm -r -f packages/mysql/temp
+    mkdir -p packages/mysql/temp
+    mkdir -p $UWKGM_PKG_MYSQL_HOST_PATH
+
+    cp packages/mysql/templates/mysql.yaml.template packages/mysql/temp/mysql.yaml
+
+    files.text.replace "{{UWKGM_PKG_MYSQL_VERSION}}" "$UWKGM_PKG_MYSQL_VERSION" packages/mysql/temp/mysql.yaml
+    files.text.replace "{{UWKGM_PKG_MYSQL_ROOT_PASSWORD}}" "$UWKGM_PKG_MYSQL_PASSWORD" packages/mysql/temp/mysql.yaml
+    files.text.replace "{{UWKGM_PKG_MYSQL_KUBE_HOST_PATH}}" "$UWKGM_PKG_MYSQL_KUBE_HOST_PATH" packages/mysql/temp/mysql.yaml
+
+    kubectl apply -f packages/mysql/temp/mysql.yaml
+
+    rm -r -f packages/mysql/temp
+}
+
+packages.mysql.install.pma.kube() {
+    rm -r -f packages/mysql/temp
+    mkdir -p packages/mysql/temp
+
+    cp packages/mysql/templates/pma.yaml.template packages/mysql/temp/pma.yaml
+
+    files.text.replace "{{UWKGM_PKG_MYSQL_PMA_VERSION}}" "$UWKGM_PKG_MYSQL_PMA_VERSION" packages/mysql/temp/pma.yaml
+    files.text.replace "{{UWKGM_PKG_MYSQL_PMA_ABSOLUTE_URI}}" "$UWKGM_PKG_MYSQL_PMA_ABSOLUTE_URI" packages/mysql/temp/pma.yaml
+
+    kubectl apply -f packages/mysql/temp/pma.yaml
+
+    rm -r -f packages/mysql/temp
+}

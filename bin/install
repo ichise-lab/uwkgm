@@ -1,0 +1,133 @@
+#!/bin/bash
+
+source bin/conf
+source bin/libs/inputs
+source bin/libs/os
+
+manage.install() {
+    while true;
+    do
+        CHOICES=(
+            "All dependencies and packaging"
+            "API's dependencies in Python virtual environment"
+            "UI's dependencies (Node.js modules)"
+        )
+
+        VALUES=(
+            all
+            api
+            ui
+        )
+
+        inputs.choices OPERATION "Install Module" "Choose module to install" "all" "" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $OPERATION == "all" ]]; then
+            manage.install.api
+            manage.install.ui
+        elif [[ $OPERATION == "api" ]]; then
+            manage.install.api
+        elif [[ $OPERATION == "ui" ]]; then
+            manage.install.ui
+        elif [[ $OPERATION == "cancel" ]]; then
+            return
+        fi
+    done
+}
+
+manage.install.api() {
+    if [[ -f "api/env/bin/activate" ]]; then
+        source api/env/bin/activate
+        echo "[UWKGM: INFO] Python environment found and activated."
+        echo ""
+    else
+        echo "[UWKGM: INFO] Python environment not found. Creating in 'api/env'..."
+        python3 -m venv api/env
+        source api/env/bin/activate
+        echo "[UWKGM: INFO] Activated."
+        echo ""
+    fi
+
+    if [[ $UWKGM_OS_BASE == "darwin" ]]; then
+        echo "[UWKGM: INFO] Additional configuration is required for mysql on macOS."
+        echo "[UWKGM: INFO] The following variables will be set before installing dependencies:"
+        echo "----------"
+        echo "export LDFLAGS='-L/usr/local/opt/openssl/lib'"
+        echo "export CPPFLAGS='-I/usr/local/opt/openssl/include'"
+        echo "----------"
+
+        export LDFLAGS="-L/usr/local/opt/openssl/lib"
+        export CPPFLAGS="-I/usr/local/opt/openssl/include"
+    fi
+
+    if [[ "$(uname -a)" == *"Ubuntu"* ]]; then
+        echo "[UWKGM: INFO] Package 'mysqlclient' may require 'libmysqlclient-dev' on Ubuntu."
+        
+        if inputs.confirm.yesno "Type 'y' if you want to install using (sudo) apt-get or 'n' to skip"; then
+            sudo apt-get install libmysqlclient-dev
+        fi
+
+        echo ""
+    fi
+
+    echo "[UWKGM: INFO] Installing dependencies..."
+    python3 -m pip install --upgrade pip
+    python3 -m pip install -r api/requirements.txt
+    echo "[UWKGM: INFO] API's dependency installation completed."
+    echo ""
+
+    if [[ $UWKGM_OS_BASE == "darwin" ]]; then
+        PYTHON_FULL_VERSION="$(cut -d' ' -f2 <<< $(python3 --version))"
+        PYTHON_MAJOR_VERSION="$(cut -d'.' -f1 <<< $PYTHON_FULL_VERSION)"
+        PYTHON_MINOR_VERSION="$(cut -d'.' -f2 <<< $PYTHON_FULL_VERSION)"
+        PYTHON_VERSION="$PYTHON_MAJOR_VERSION.$PYTHON_MINOR_VERSION"
+
+        MYSQL_CLIENT_BACKEND="api/env/lib/python$PYTHON_VERSION/site-packages/django/db/backends/mysql/base.py"
+
+        echo "[UWKGM: INFO] We consistently encountered an error in Django's MySQL backend in macOS environment. The backend fails to recognize mysqlclient's version that satisfies its requirement. Part of the backend's code must be disabled to fix the problem."
+        echo ""
+        echo "You can choose to let us edit and make a backup of '$MYSQL_CLIENT_BACKEND'."
+        echo ""
+
+        if inputs.confirm.yesno "Type 'y' to edit the file automatically or 'n' to skip"; then
+            while [[ $MYSQL_CLIENT_BACKEND != "" && ! -f $MYSQL_CLIENT_BACKEND ]];
+            do
+                echo "[UWKGM: ERROR] We could not find '$MYSQL_CLIENT_BACKEND'."
+                read -r -p "[UWKGM: INPUT] Input the correct location or press Enter/Return to skip: " MYSQL_CLIENT_BACKEND
+            done
+
+            if [[ $MYSQL_CLIENT_BACKEND == "" ]]; then
+                echo "[UWKGM: INFO] Skipped."
+                echo ""
+            else
+                cp $MYSQL_CLIENT_BACKEND $MYSQL_CLIENT_BACKEND.bak
+
+                ORIGINAL_CODE="raise ImproperlyConfigured('mysqlclient 1.4.0 or newer is required; you have %s.' % Database.__version__)"
+
+                sed -i '' "s@$ORIGINAL_CODE@pass # $ORIGINAL_CODE@" $MYSQL_CLIENT_BACKEND
+
+                echo "[UWKGM: INFO] Done."
+                echo ""
+            fi
+        else
+            echo "[UWKGM: INFO] Skipped."
+            echo ""
+        fi
+    fi
+
+    echo "***********************"
+    echo "[UWKGM: INFO] IMPORTANT"
+    echo "***********************"
+    echo "You will need to create a database named 'UWKGM' in MySQL before running the API server."
+    echo "You may use our MySQL management package or type the following MySQL command directly:"
+    echo "    CREATE DATABASE UWKGM CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    echo
+}
+
+manage.install.ui() {
+    npm install --unsafe-perm=true --allow-root --prefix "ui/uwkgm"
+    echo "[UWKGM: INFO] UI's dependency installation completed. Running 'npm audit fix'..."
+
+    npm audit fix --prefix "ui/uwkgm"
+    echo "[UWKGM: INFO] UI's audit and fix completed."
+    echo ""
+}

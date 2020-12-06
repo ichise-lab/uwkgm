@@ -1,0 +1,61 @@
+#!/bin/bash
+
+source bin/libs/args
+source bin/libs/inputs
+source bin/libs/files
+source packages/mongo/package
+
+packages.mongo.install() {
+    while true;
+    do
+        CHOICES=(
+            "Deploy MongoDB in a Kubernetes cluster"
+            "Deploy Mongo Express in a Kubernetes cluster"
+        )
+
+        VALUES=(
+            kube
+            express
+        )
+
+        args.pull INSTALL
+        inputs.choices INSTALL "Install MongoDB" "Choose installation" "kube" "$INSTALL" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $INSTALL == "kube" ]]; then
+            packages.mongo.install.kube
+        elif [[ $INSTALL == "express" ]]; then
+            packages.mongo.install.express
+        elif [[ $INSTALL == "cancel" ]]; then
+            return
+        fi
+    done
+}
+
+packages.mongo.install.kube() {
+    rm -r -f packages/mongo/temp
+    mkdir packages/mongo/temp
+    cp packages/mongo/templates/mongo.yaml.template packages/mongo/temp/mongo.yaml
+
+    files.text.replace "{{UWKGM_PKG_MONGO_VERSION}}" "$UWKGM_PKG_MONGO_VERSION" packages/mongo/temp/mongo.yaml
+    files.text.replace "{{UWKGM_PKG_MONGO_USERNAME}}" "$UWKGM_PKG_MONGO_USERNAME" packages/mongo/temp/mongo.yaml
+    files.text.replace "{{UWKGM_PKG_MONGO_PASSWORD}}" "$UWKGM_PKG_MONGO_PASSWORD" packages/mongo/temp/mongo.yaml
+    files.text.replace "{{UWKGM_PKG_MONGO_KUBE_HOST_PATH}}" "$UWKGM_PKG_MONGO_KUBE_HOST_PATH" packages/mongo/temp/mongo.yaml
+
+    kubectl apply -f packages/mongo/temp/mongo.yaml
+
+    rm -r -f packages/mongo/temp
+}
+
+packages.mongo.install.express() {
+    rm -r -f packages/mongo/temp
+    mkdir -p packages/mongo/temp
+    cp packages/mongo/templates/express.yaml.template packages/mongo/temp/express.yaml
+
+    files.text.replace "{{UWKGM_PKG_MONGO_EXPRESS_VERSION}}" "$UWKGM_PKG_MONGO_EXPRESS_VERSION" packages/mongo/temp/express.yaml
+    files.text.replace "{{UWKGM_PKG_MONGO_USERNAME}}" "$UWKGM_PKG_MONGO_USERNAME" packages/mongo/temp/express.yaml
+    files.text.replace "{{UWKGM_PKG_MONGO_PASSWORD}}" "$UWKGM_PKG_MONGO_PASSWORD" packages/mongo/temp/express.yaml
+    
+    kubectl apply -f packages/mongo/temp/express.yaml
+
+    rm -r -f packages/mongo/temp
+}

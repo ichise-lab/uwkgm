@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export UWKGM_VERSION=0.2.0
+export UWKGM_API_VERSION=0.2.0.0
+export UWKGM_UI_VERSION=0.2.0.0

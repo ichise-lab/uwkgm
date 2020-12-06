@@ -1,0 +1,7 @@
+DELETE FROM DB.DBA.load_list;
+ld_dir('/ext', '*.nt', '{{UWKGM_PKG_VIRTUOSO_IMPORT_GRAPH}}');
+ld_dir('/ext', '*.ttl', '{{UWKGM_PKG_VIRTUOSO_IMPORT_GRAPH}}');
+ld_dir('/ext', '*.owl', '{{UWKGM_PKG_VIRTUOSO_IMPORT_GRAPH}}');
+SELECT * FROM DB.DBA.load_list;
+rdf_loader_run();
+checkpoint;

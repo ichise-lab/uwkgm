@@ -1,0 +1,19 @@
+#!/bin/bash
+
+source package
+
+manage.intro() {
+    echo ""
+    echo "  _    ___          ___  _______ __  __  "
+    echo " | |  | \ \        / / |/ / ____|  \/  | "
+    echo " | |  | |\ \  /\  / /| ' / |  __| \  / | "
+    echo " | |  | | \ \/  \/ / |  <| | |_ | |\/| | "
+    echo " | |__| |  \  /\  /  | . \ |__| | |  | | "
+    echo "  \____/    \/  \/   |_|\_\_____|_|  |_| "
+    echo ""
+    echo "The UWKGM Platform Manager version $UWKGM_VERSION."
+    echo "(C) 2020 Ichise Laboratory AIST & NII."
+    echo "Distribued under the 3-clause BSD license."
+    echo "For more information, visit https://uwkgm.nii.ac.jp"
+    echo ""
+}

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uwkgm-corenlp-deployment
+  labels:
+    app: uwkgm-corenlp-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: uwkgm-corenlp-app
+  template:
+    metadata:
+      labels:
+        app: uwkgm-corenlp-app
+    spec:
+      containers:
+      - name: uwkgm-corenlp-app
+        image: "localhost:5000/uwkgm/corenlp:{{UWKGM_PKG_CORENLP_VERSION}}"
+        ports:
+            - containerPort: 80
+        resources:
+          limits:
+            memory: 6Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: uwkgm-corenlp-service
+spec:
+  selector:
+    app: uwkgm-corenlp-app
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort

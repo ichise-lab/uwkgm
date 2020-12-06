@@ -1,0 +1,157 @@
+#!/bin/bash
+
+source bin/libs/args
+source bin/libs/inputs
+source bin/libs/secure
+
+manage.conf() {
+    while true;
+    do
+        CHOICES=(
+            "Base"
+            "Databases"
+            "Secrets"
+        )
+
+        VALUES=(
+            base
+            databases
+            secrets
+        )
+        
+        args.pull CONFIG
+        inputs.choices CONFIG "Configuration" "Choose configuration" "base" "$CONFIG" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $CONFIG == "base" ]]; then
+            manage.conf.base
+        elif [[ $CONFIG == "databases" ]]; then
+            manage.conf.databases
+        elif [[ $CONFIG == "secrets" ]]; then
+            manage.conf.edit "Secret-key" "secrets"
+        elif [[ $CONFIG == "cancel" ]]; then
+            return
+        fi
+    done
+}
+
+manage.conf.base() {
+    if [[ -f "conf/base" ]]; then
+        echo "[UWKGM: INFO] Base configuration found. If you want to change the configuration, edit conf/base manually and restart this manager."
+    else
+        echo "[UWKGM: INFO] Base configuration file not found. Creating from its template."
+        cp "templates/cms/conf/$UWKGM_ENV/base.template" "conf/base"
+        echo "[UWKGM: INFO] Done. If you want to change the configuration, edit conf/base manually and restart this manager."
+    fi
+    
+    echo ""
+}
+
+manage.conf.databases() {
+    if [[ -f "conf/databases" ]]; then
+        echo "[UWKGM: INFO] Base configuration found. If you want to change the configuration, edit conf/databases manually and restart this manager."
+    else
+        echo "[UWKGM: INFO] Base configuration file not found. Creating from its template."
+        cp "templates/cms/conf/$UWKGM_ENV/databases.template" "conf/databases"
+        echo "[UWKGM: INFO] Done. If you want to change the configuration, edit conf/databases manually and restart this manager."
+    fi
+    
+    echo ""
+}
+
+manage.conf.edit() {
+    CONF_TITLE="$1"
+    CONF_FILE="$2"
+
+    EDITOR_CHOICES=(
+        "Edit manually"
+        "vim"
+        "nano"
+    )
+
+    EDITOR_VALUES=(
+        manual
+        vim
+        nano
+    )
+
+    EDITOR_CONFIRM_CHOICES=(
+        "Save and encrypt configuration"
+        "Edit configuration"
+    )
+
+    EDITOR_CONFIRM_VALUES=(
+        save
+        edit
+    )
+
+    secure.password.master
+    mkdir -p conf
+
+    if [[ -f "conf/$UWKGM_ENV.$CONF_FILE.enc" ]]; then
+        echo "[UWKGM: INFO] $CONF_TITLE configuration found."
+
+        mkdir -p temp
+
+        echo "----------"
+        secure.file.decrypt "conf/$UWKGM_ENV.$CONF_FILE.enc" "temp/$UWKGM_ENV.$CONF_FILE"
+        cat "temp/$UWKGM_ENV.$CONF_FILE"
+        echo ""
+        echo "----------"
+
+    else
+        echo "[UWKGM: INFO] $CONF_TITLE configuration not found."
+        echo "[UWKGM: INFO] Creating a new temporary configuration file."
+        echo "[UWKGM: INFO] Saved to 'temp/$UWKGM_ENV.$CONF_FILE':"
+
+        mkdir -p temp
+
+        cp "templates/cms/conf/$UWKGM_ENV/$CONF_FILE.template" "temp/$UWKGM_ENV.$CONF_FILE"
+
+        echo "----------"
+        cat "temp/$UWKGM_ENV.$CONF_FILE"
+        echo ""
+        echo "----------"
+
+    fi
+
+    CONFIG=
+    inputs.choices CONFIG "Edit Configuration" "Choose editing option" "manual" "$CONFIG" "${EDITOR_CHOICES[@]}" "${EDITOR_VALUES[@]}"
+    CONFIRM=edit
+
+    if [[ $CONFIG == "cancel" ]]; then
+        rm -r -f temp
+        return
+    fi
+
+    while [[ $CONFIRM == "edit" ]];
+    do
+        if [[ $CONFIG == "vim" ]]; then
+            vim "temp/$UWKGM_ENV.$CONF_FILE"
+        elif [[ $CONFIG == "nano" ]]; then
+            nano "temp/$UWKGM_ENV.$CONF_FILE"
+        fi
+                
+        inputs.choices CONFIRM "Confirm Edit Configuration" "Confirm editing" "save" "" "${EDITOR_CONFIRM_CHOICES[@]}" "${EDITOR_CONFIRM_VALUES[@]}"
+
+        if [[ $CONFIRM == "cancel" ]]; then
+            rm -r -f temp
+            return
+        fi
+    done
+
+    mkdir -p conf
+    rm -f "conf/$UWKGM_ENV.$CONF_FILE.enc"
+    secure.file.encryt "temp/$UWKGM_ENV.$CONF_FILE" "conf/$UWKGM_ENV.$CONF_FILE.enc"
+    rm -r -f temp
+
+    echo "[UWKGM: INFO] $CONF_TITLE configuration encrypted."
+    echo ""
+}
+
+manage.conf.secure.load() {
+    rm -r -f temp
+    mkdir -p temp
+    secure.file.decrypt "$1" temp/decrypted
+    source temp/decrypted
+    rm -r -f temp
+}

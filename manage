@@ -1,0 +1,14 @@
+#!/bin/bash
+
+source bin/manage
+source bin/libs/args
+
+export UWKGM_ENV
+export UWKGM_ARGS
+export UWKGM_KWARGS
+export UWKGM_INTERACTIVE
+export UWKGM_MASTER_PASSWORD
+
+args.parse "$@"
+
+manage

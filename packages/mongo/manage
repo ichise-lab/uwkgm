@@ -1,0 +1,38 @@
+#!/bin/bash
+
+source bin/libs/args
+source bin/libs/inputs
+source packages/mongo/bin/install
+source packages/mongo/bin/run
+source packages/mongo/package
+
+packages.mongo.manage() {
+    rm -r -f packages/mongo/temp
+
+    while true;
+    do
+        CHOICES=(
+            "Run"
+            "Install"
+        )
+
+        VALUES=(
+            run
+            install
+        )
+
+        echo "[UWKGM: INFO] MongoDB Community Edition version $UWKGM_PKG_MONGO_VERSION"
+
+        args.pull OPERATION
+        inputs.choices OPERATION "MongoDB Operation" "Choose operation for MongoDB" "run" "$OPERATION" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $OPERATION == "run" ]]; then
+            packages.mongo.run
+        elif [[ $OPERATION == "install" ]]; then
+            packages.mongo.install
+        elif [[ $OPERATION == "cancel" ]]; then
+            rm -r -f packages/mongo/temp
+            return
+        fi
+    done
+}

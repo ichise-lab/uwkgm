@@ -17,13 +17,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from dorest import packages
+
 from uwkgm import url_prefix
-from uwkgm.views import home_page
+from uwkgm.views import home_page, api_page
 
 urlpatterns = [
     path('', home_page),
+    path('api/', api_page),
     path('%s/admin/' % url_prefix, admin.site.urls),
-    path('%s/accounts/' % url_prefix, include('accounts.extensions')),
-    path('%s/database/' % url_prefix, include('database.extensions')),
-    path('%s/knowledge/' % url_prefix, include('knowledge.extensions'))
+    path('%s/accounts/' % url_prefix, include('accounts.urls')),
 ]
+
+packages.bind('packages', to=__name__, url=url_prefix)

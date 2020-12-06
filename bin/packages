@@ -1,0 +1,459 @@
+#!/bin/bash
+
+source bin/libs/args
+source bin/libs/files
+source bin/libs/formats
+source bin/libs/inputs
+
+manage.packages() {
+    while true;
+    do
+        CHOICES=(
+            "Operate packages"
+            "Install a package"
+            "Uninstall a package"
+            "Create a new package"
+        )
+
+        VALUES=(
+            opr
+            install
+            uninstall
+            create
+        )
+
+        args.pull OPERATION
+        inputs.choices OPERATION "Packages" "Choose operation" "opr" "$OPERATION" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $OPERATION == "opr" ]]; then
+            manage.packages.site
+        elif [[ $OPERATION == "install" ]]; then
+            manage.packages.install
+        elif [[ $OPERATION == "create" ]]; then
+            manage.packages.create
+        elif [[ $OPERATION == "cancel" ]]; then
+            return
+        fi
+    done
+}
+
+manage.packages.site() {
+    PKGS=()
+    PKGS_DIR=($(ls packages))
+
+    for i in $(seq 0 $((${#PKGS_DIR[@]} - 1)));
+    do
+        if [[ -f "packages/${PKGS_DIR[i]}/package" ]]; then
+            PKGS+=("${PKGS_DIR[i]}")
+        fi
+    done
+
+    args.pull PACKAGE
+
+    if [[ $PACKAGE == "" ]]; then
+        while true;
+        do
+            echo "[UWKGM: INFO] The following are locally stored packages:"
+
+            for PKG_MG_I in $(seq 0 $((${#PKGS[@]} - 1)));
+            do
+                manage.packages.site.version VERSION "${PKGS[PKG_MG_I]}"
+                manage.packages.site.description DESCRIPTION "${PKGS[PKG_MG_I]}"
+
+                formats.align.left CMD "${PKGS[PKG_MG_I]}" 10
+                formats.align.left VERSION "$VERSION" 10
+
+                echo "  [$(($PKG_MG_I + 1))]  $CMD $VERSION $DESCRIPTION"
+            done
+
+            echo "  [0]  cancel      Cancel"
+            
+            read -r -p "[UWKGM: INPUT] Choose the package to manage: " PKG
+
+            if [[ $PKG == 0 ]]; then
+                echo "[UWKGM: INFO] Selected: Cancel"
+                echo ""
+                return
+            elif [[ $PKG -ge 1 && $PKG -le ${#PKGS[@]} ]]; then
+                echo "[UWKGM: INFO] Selected: ${PKGS[PKG - 1]}"
+                echo ""
+                eval "source packages/${PKGS[PKG - 1]}/manage"
+                eval "packages.${PKGS[PKG - 1]}.manage"
+            else
+                echo "[UWKGM: ERROR] Invalid choice."
+                echo ""
+            fi
+        done
+    else
+        eval "source packages/$PACKAGE/manage"
+        eval "packages.$PACKAGE.manage"
+    fi
+}
+
+manage.packages.site.run() {
+    PKGS=($(ls packages))
+
+    echo "[UWKGM: INFO] Applying package configurations:"
+
+    for PKG_SITE_I in $(seq 0 $((${#PKGS[@]} - 1)));
+    do
+        if [[ -f "packages/${PKGS[PKG_SITE_I]}/package" ]]; then
+            manage.packages.site.version VERSION "${PKGS[PKG_SITE_I]}"
+            manage.packages.site.description DESCRIPTION "${PKGS[PKG_SITE_I]}"
+
+            formats.align.left CMD "${PKGS[PKG_SITE_I]}" 10
+            formats.align.left VERSION "$VERSION" 10
+
+            echo "..  $CMD $VERSION $DESCRIPTION"
+
+            if [[ -f "packages/${PKGS[PKG_SITE_I]}/bin/run" ]]; then
+                if grep -Fq "packages.${PKGS[PKG_SITE_I]}.site.run" "packages/${PKGS[PKG_SITE_I]}/bin/run"; then
+                    eval "source packages/${PKGS[PKG_SITE_I]}/bin/run"
+                    eval "packages.${PKGS[PKG_SITE_I]}.site.run"
+                fi
+            fi
+        fi
+    done
+
+    echo ""
+}
+
+manage.packages.site.version() {
+    if [[ -f "packages/$2/package" ]]; then
+        PKG_UPPER=$(echo "$2" | tr a-z A-Z)
+        eval "source packages/$2/package"
+        eval "$1=\"\$UWKGM_PKG_${PKG_UPPER}_VERSION\""
+    fi
+}
+
+manage.packages.site.description() {
+    if [[ -f "packages/$2/package" ]]; then
+        PKG_UPPER=$(echo "$2" | tr a-z A-Z)
+        eval "source packages/$2/package"
+        eval "$1=\"\$UWKGM_PKG_${PKG_UPPER}_DESCRIPTION\""
+    fi
+}
+
+manage.packages.install() {
+    while true;
+    do
+        CHOICES=(
+            "Install from a source file"
+            "Download and install"
+            "Clone from GitHub"
+        )
+
+        VALUES=(
+            file
+            download
+            github
+        )
+
+        args.pull METHOD
+        inputs.choices METHOD "Install UWKGM Package" "Choose installation method" "file" "$METHOD" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $METHOD == "file" ]]; then
+            manage.packages.install.file
+        elif [[ $METHOD == "cancel" ]]; then
+            return
+        fi
+    done
+}
+
+manage.packages.install.file() {
+    echo "[UWKGM: INFO] Install UWKGM Package"
+
+    inputs.text "Choose the package file (tar.gz)" FILE_LOCATION --non-empty
+
+    if [ -f "$FILE_LOCATION" ]; then
+        rm -r -f temp
+        mkdir -p temp
+
+        echo "Extracting and verifying the packages..."
+        tar xzf "$FILE_LOCATION" -C "temp/"
+
+        PACKAGES=($(ls temp/packages))
+
+        for i in $(seq 0 $((${#PACKAGES[@]} - 1)));
+        do
+            if [ -d "packages/${PACKAGES[i]}" ]; then
+                echo "[UWKGM: ERROR] Package '${PACKAGES[i]}' already exists."
+                return
+            fi
+        done
+
+        for i in $(seq 0 $((${#PACKAGES[@]} - 1)));
+        do
+            mv "temp/packages/${PACKAGES[i]}" "packages/"
+            eval "source packages/${PACKAGES[i]}/bin/install"
+            eval "packages.${PACKAGES[i]}.install"
+        done
+
+        rm -r -f temp
+    else
+        echo "[UWKGM: ERROR] Invalid file."
+    fi
+}
+
+manage.packages.create() {
+    VALID_PACKAGE=false
+
+    echo "[UWKGM: INFO] Package Creator"
+    echo "This tool will assist you in creating a new empty package."
+    echo "The package includes tools and templates for you to create,"
+    echo "compile, and update API/UI packages."
+    echo ""
+
+    echo "[UWKGM: INFO] Package Information"
+
+    while [ "$VALID_PACKAGE" = false ];
+    do
+        inputs.text "Name" PACKAGE_NAME --non-empty
+
+        if [[ -d "packages/$PACKAGE_NAME" ]]; then
+            echo "[UWKGM: ERROR] Package \"$PACKAGE_NAME\" already exists."
+        else
+            VALID_PACKAGE=true
+        fi
+    done
+
+    inputs.text "Title" PACKAGE_TITLE --non-empty
+    inputs.text "Description" PACKAGE_DESCRIPTION --non-empty
+    inputs.text "Version" PACKAGE_VERSION --non-empty
+
+    PACKAGE_DIR="packages/$PACKAGE_NAME"
+    PACKAGE_FILE="$PACKAGE_DIR/package"
+    PACKAGE_NAME_UPPERCASE=$( tr '[a-z]' '[A-Z]' <<< $PACKAGE_NAME)
+
+    mkdir $PACKAGE_DIR
+
+    echo "#!/bin/bash" >> $PACKAGE_FILE
+    echo "" >> $PACKAGE_FILE
+    echo "export UWKGM_PKG_${PACKAGE_NAME_UPPERCASE}_TITLE=$PACKAGE_TITLE" >> $PACKAGE_FILE
+    echo "export UWKGM_PKG_${PACKAGE_NAME_UPPERCASE}_VERSION=$PACKAGE_VERSION" >> $PACKAGE_FILE
+    echo "export UWKGM_PKG_${PACKAGE_NAME_UPPERCASE}_DESCRIPTION=\"$PACKAGE_DESCRIPTION\"" >> $PACKAGE_FILE
+
+    cp templates/cms/package/manage.template "$PACKAGE_DIR/manage"
+
+    files.text.replace "{{PACKAGE_NAME}}" $PACKAGE_NAME "$PACKAGE_DIR/manage"
+    files.text.replace "{{PACKAGE_NAME_UPPERCASE}}" $PACKAGE_NAME_UPPERCASE "$PACKAGE_DIR/manage"
+
+    echo "[UWKGM: INFO] Successfully created $PACKAGE_NAME."
+    echo ""
+}
+
+manage.packages.toolkit() {
+    PACKAGE_NAME="$1"
+    PACKAGE_VERSION="$2"
+
+    while true;
+    do
+        CHOICES=(
+            "Create an API package"
+            "Create a UI package"
+            "Compile the package"
+            "Export the package"
+        )
+
+        VALUES=(
+            create_api
+            create_ui
+            compile
+            "export"
+        )
+
+        args.pull OPERATION
+        inputs.choices OPERATION "Package Toolkit" "Choose operation" "create_api" "$OPERATION" "${CHOICES[@]}" "${VALUES[@]}"
+
+        if [[ $OPERATION == "create_api" ]]; then
+            manage.packages.toolkit.api.create $PACKAGE_NAME
+        elif [[ $OPERATION == "compile" ]]; then
+            manage.packages.toolkit.compile $PACKAGE_NAME
+        elif [[ $OPERATION == "export" ]]; then
+            manage.packages.toolkit.export $PACKAGE_NAME $PACKAGE_VERSION
+        elif [[ $OPERATION == "cancel" ]]; then
+            return
+        fi
+
+    done
+}
+
+manage.packages.toolkit.api.create() {
+    PACKAGE_NAME="$1"
+    VALID_PACKAGE=false
+
+    echo "[UWKGM: INFO] API Package Creator"
+    echo "This tool will assist you in creating a new API package."
+    echo "The package will be created in api/uwkgm/packages"
+    echo "and will include structured endpoints."
+    echo ""
+
+    echo "[UWKGM: INFO] Package Information"
+    
+    while [ "$VALID_PACKAGE" = false ];
+    do
+        inputs.text "Name" API_PACKAGE_NAME --non-empty
+
+        if [[ -d "api/uwkgm/packages/$PACKAGE_NAME" ]]; then
+            echo "[UWKGM: ERROR] API package \"$API_PACKAGE_NAME\" already exists."
+        else
+            VALID_PACKAGE=true
+        fi
+    done
+
+    echo ""
+    echo "Default package URL: $API_PACKAGE_NAME (http://domain/api/v1.0/$API_PACKAGE_NAME)"
+
+    inputs.text "URL" API_PACKAGE_URL --default $API_PACKAGE_NAME
+
+    if inputs.confirm.yesno "Would you like to set up structured resources?"; then
+        PACKAGE_INCLUDE_RESOURCE=true
+    fi
+    
+    if inputs.confirm.yesno "Would you like to set up interface endpoints?"; then
+        PACKAGE_INCLUDE_INTERFACE=true
+    fi
+
+    if inputs.confirm.yesno "Would you like to set up an endpoint for API testing?"; then
+        PACKAGE_INCLUDE_TEST=true
+    fi
+
+    API_PACKAGE_DIR="api/uwkgm/packages/$API_PACKAGE_NAME"
+
+    mkdir -p "$API_PACKAGE_DIR"
+    touch "$API_PACKAGE_DIR/__init__.py"
+    echo "from dorest import packages" >> "$API_PACKAGE_DIR/package.py"
+    echo "" >> "$API_PACKAGE_DIR/package.py"
+    echo "packages.link(__name__)" >> "$API_PACKAGE_DIR/package.py"
+    echo "" >> "$API_PACKAGE_DIR/package.py"
+
+    mkdir -p "$API_PACKAGE_DIR/conf"
+    echo "root: /$API_PACKAGE_URL" >> "$API_PACKAGE_DIR/conf/urls.yaml"
+    echo "struct: null" >> "$API_PACKAGE_DIR/conf/urls.yaml"
+
+    mkdir -p "$API_PACKAGE_DIR/endpoints"
+    touch "$API_PACKAGE_DIR/endpoints/__init__.py"
+
+    if [ "$PACKAGE_INCLUDE_RESOURCE" = true ]; then
+        mkdir -p "$API_PACKAGE_DIR/resources"
+        touch "$API_PACKAGE_DIR/resources/__init__.py"
+    fi
+
+    if [ "$PACKAGE_INCLUDE_TEST" = true ]; then
+        cp templates/api/packages/test.py.template "$API_PACKAGE_DIR/endpoints/test.py"
+    fi
+
+    BUILD_DIR="packages/$PACKAGE_NAME/build/api/packages"
+
+    mkdir -p "$BUILD_DIR"
+    echo "#!/bin/bash" >> "$BUILD_DIR/$API_PACKAGE_NAME"
+    echo "" >> "$BUILD_DIR/$API_PACKAGE_NAME"
+    echo "export INCLUDE_RESOURCE=true" >> "$BUILD_DIR/$API_PACKAGE_NAME"
+
+    echo ""
+    echo "Successfully created the API package."
+    echo ""
+}
+
+manage.packages.toolkit.compile() {
+    PACKAGE_NAME="$1"
+    BIN_DIR="packages/$PACKAGE_NAME/bin"
+    PAYLOAD_DIR="packages/$PACKAGE_NAME/payload"
+
+    rm -r -f "$PAYLOAD_DIR/build"
+    mkdir -p "$PAYLOAD_DIR/build"
+
+    echo "[UWKGM: INFO] API Package Compiler"
+    manage.packages.toolkit.compile.api $PACKAGE_NAME
+
+    rm -r -f "$BIN_DIR/build"
+    mkdir -p "$BIN_DIR/build"
+    cp "templates/cms/package/install.template" "$BIN_DIR/build/install"
+    files.text.replace "{{PACKAGE_NAME}}" $PACKAGE_NAME "$BIN_DIR/build/install"
+
+    if [ -f "packages/$PACKAGE_NAME/install" ]; then
+        echo "[UWKGM: INFO] *** IMPORTANT ***"
+        echo "We detected existing $PACKAGE_NAME's installation script at:"
+        echo "..  packages/$PACKAGE_NAME/bin/install"
+        echo "Please make sure that the script call our installation script:"
+        echo "..  packages/$PACKAGE_NAME/bin/build/install"
+        echo ""
+        inputs.confirm.enter
+    else
+        echo "#!/bin/bash" >> "$BIN_DIR/install"
+        echo "" >> "$BIN_DIR/install"
+        echo "source $BIN_DIR/build/install" >> "$BIN_DIR/install"
+        echo "" >> "$BIN_DIR/install"
+        echo "packages.$PACKAGE_NAME.install() {" >> "$BIN_DIR/install"
+        echo "    packages.$PACKAGE_NAME.build.install" >> "$BIN_DIR/install"
+        echo "}" >> "$BIN_DIR/install"
+    fi
+
+    echo "[UWKGM: INFO] Successfully built the package."
+    echo "All related API/UI packages are stored in:"
+    echo "..  'packages/$PACKAGE_NAME/payload/build'."
+    echo ""
+}
+
+manage.packages.toolkit.compile.api() {
+    PACKAGE_NAME="$1"
+    BUILD_DIR="packages/$PACKAGE_NAME/build/api/packages"
+    OUTPUT_DIR="packages/$PACKAGE_NAME/payload/build/api/packages"
+    PACKAGES=($(ls "$BUILD_DIR"))
+
+    echo "Compiling linked API packages..."
+    mkdir -p "$OUTPUT_DIR"
+
+    for i in $(seq 0 $((${#PACKAGES[@]} - 1)));
+    do
+        tar -czf "$OUTPUT_DIR/${PACKAGES[i]}.tar.gz" "api/uwkgm/packages/${PACKAGES[i]}"
+        formats.align.left PACKAGE_NAME_FORMATTED "${PACKAGES[i]}" 10
+        echo "..  $PACKAGE_NAME_FORMATTED  $(du -h $OUTPUT_DIR/${PACKAGES[i]}.tar.gz | cut -f1)"
+    done
+
+    echo ""
+}
+
+manage.packages.toolkit.export() {
+    PACKAGE_NAME="$1"
+    PACKAGE_VERSION="$2"
+    VALID_DIR=false
+
+    while [ $VALID_DIR = false ];
+    do
+        inputs.text "Output directory" OUTPUT_DIR --non-empty
+
+        if [ -d "$OUTPUT_DIR" ]; then
+            VALID_DIR=true
+        else
+            echo "[UWKGM: ERROR] Invalid directory."
+        fi
+    done
+
+    tar -czf "$OUTPUT_DIR/${PACKAGE_NAME}_${PACKAGE_VERSION}.tar.gz" "packages/$PACKAGE_NAME"
+}
+
+manage.packages.install.api.packages() {
+    PACKAGE_NAME="$1"
+    BUILD_DIR="packages/$PACKAGE_NAME/build/api/packages"
+    SOURCE_DIR="packages/$PACKAGE_NAME/payload/build/api/packages"
+    TARGET_DIR="api/uwkgm/packages/"
+    PACKAGES=($(ls "$BUILD_DIR"))
+
+    echo "Installing linked API packages..."
+
+    for i in $(seq 0 $((${#PACKAGES[@]} - 1)));
+    do
+        echo "..  ${PACKAGES[i]}"
+
+        if [ -d "$TARGET_DIR/${PACKAGES[i]}" ]; then
+            if inputs.confirm.yesno "Package ${PACKAGES[i]} already exists. Do you want to replace?"; then
+                rm -r -f "$TARGET_DIR/${PACKAGES[i]}"
+            fi
+        fi
+
+        tar xzf "$SOURCE_DIR/${PACKAGES[i]}.tar.gz" "api/uwkgm/packages/"
+    done
+
+    echo ""
+}

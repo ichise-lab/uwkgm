@@ -1,0 +1,53 @@
+#!/bin/bash
+
+source bin/libs/args
+source bin/libs/inputs
+source bin/libs/secure
+
+packages.mysql.servers.local.execute() {
+    secure.password.master
+    manage.conf.secure.load "conf/$UWKGM_ENV.secrets.enc"
+    
+    mysql --user="$UWKGM_DB_DJANGO_USERNAME" --password="$UWKGM_DB_DJANGO_PASSWORD" -e "$1"
+}
+
+packages.mysql.servers.docker.execute() {
+    secure.password.master
+    manage.conf.secure.load "conf/$UWKGM_ENV.secrets.enc"
+
+    sudo docker exec -it uwkgm-mysql mysql --user="$UWKGM_DB_DJANGO_USERNAME" --password="$UWKGM_DB_DJANGO_PASSWORD" -e "$1"
+}
+
+packages.mysql.servers.kube.execute() {
+    rm -r -f packages/mysql/temp
+    mkdir -p packages/mysql/temp
+
+    secure.password.master
+    manage.conf.secure.load "conf/$UWKGM_ENV.secrets.enc"
+
+    packages.mysql.servers.kube.execute.cmd "$1"
+
+    args.kwargs.get RETRY "--retry"
+
+    if [[ $RETRY == true ]]; then
+        while [[ $(cat packages/mysql/temp/mysql.log) == *'ERROR'* ]];
+        do
+            echo "[UWKGM: INFO] MySQL produced the following output:"
+            cat packages/mysql/temp/mysql.log
+            echo ""
+            echo "[UWKGM: INFO] Failed to connect to MySQL service. The service may still be initializing. Try again in 5 seconds..."
+            sleep 5
+            echo "Trying to connect to MySQL service..."
+            packages.mysql.servers.kube.execute.cmd "$1"
+        done
+    else
+        echo "[UWKGM: INFO] MySQL produced the following output:"
+        cat packages/mysql/temp/mysql.log
+    fi
+
+    rm -r -f packages/mysql/temp
+}
+
+packages.mysql.servers.kube.execute.cmd() {
+    kubectl run -it --rm --image=mysql:$UWKGM_DB_DJANGO_VERSION --restart=Never mysql-client -- mysql -h uwkgm-mysql-service --user="$UWKGM_DB_DJANGO_USERNAME" --password="$UWKGM_DB_DJANGO_PASSWORD" -e "$1" > packages/mysql/temp/mysql.log
+}
