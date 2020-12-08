@@ -136,6 +136,11 @@ export class GraphsClass extends React.Component {
         this.setState(() => ({isShowingRulePage: !this.state.isShowingRulePage}))
     }
 
+    // Temporary function
+    closeRulePage = () => {
+        this.setState(() => ({isShowingRulePage: false}));
+    }
+
     handleAddNode = node => {
         this.fetchNodes([node.entity]);
     }
@@ -156,6 +161,7 @@ export class GraphsClass extends React.Component {
                 widgets={this.state.widgets}
                 openWidgets={this.openWidgets}
                 closeWidgets={this.closeWidgets}
+                closeRulePage={this.closeRulePage}
                 toggleRulePage={this.toggleRulePage}
                 isShowingRulePage={this.state.isShowingRulePage}
                 onAddNode={this.handleAddNode}
@@ -175,6 +181,7 @@ const GraphsFunc = (props) => {
         widgets,
         openWidgets,
         closeWidgets,
+        closeRulePage,
         toggleRulePage,
         isShowingRulePage,
         onAddNode
@@ -223,6 +230,7 @@ const GraphsFunc = (props) => {
                         />
                     : ''}
                     <Tools 
+                        closeRulePage={closeRulePage}
                         toggleRulePage={toggleRulePage}
                     />
                 </div>

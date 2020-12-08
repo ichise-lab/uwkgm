@@ -70,12 +70,14 @@ const OptionsFunc = (props) => {
                     min={10}
                     max={100}
                     step={10}
+                    disabled
                 />
                 <SubHeader title={<Language text={content.data} />} />
                 <SwitchBlock 
                     label={<Language text={content.autoUpdate} />}
                     value="auto"
                     checked={true}
+                    disabled
                 />
             </Section>
         </React.Fragment>

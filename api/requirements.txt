@@ -12,7 +12,7 @@ dorest==0.1.2
 idna==2.10
 isodate==0.6.0
 joblib==0.17.0
-mysqlclient=2.0.1
+mysqlclient==2.0.1
 nltk==3.5
 pycparser==2.20
 PyJWT==1.7.1

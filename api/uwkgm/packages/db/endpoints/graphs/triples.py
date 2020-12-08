@@ -12,7 +12,9 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from dorest import interfaces
 from dorest.decorators import endpoint
-from dorest.permissions import IsTrustedUser, OR
+from dorest.permissions import OR
+
+from accounts.permissions import IsTrustedUser
 
 
 @endpoint(['GET'], requires=[IsAuthenticated])
@@ -50,7 +52,7 @@ def delete(triple: Tuple[str, str, str], graph: str = os.environ['UWKGM_DB_GRAPH
     return interfaces.resolve(delete)(triple, graph)
 
 
-@endpoint(['GET'], requires=[OR(IsAdminUser, IsTrustedUser)])
+@endpoint(['GET'], requires=[IsAuthenticated])
 def verify(triple: Tuple[str, str, str], graph: str = os.environ['UWKGM_DB_GRAPHS_DEFAULT_GRAPH']) -> Dict[str, Any]:
     """Verify a new triple
 

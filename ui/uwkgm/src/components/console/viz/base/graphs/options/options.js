@@ -61,7 +61,7 @@ export class OptionsClass extends React.Component {
 
     handleColorSetChange = async (index, color) => {
         var options = this.props.reducers.graphs.options;
-        options.styles.colorSet[index] = color;
+        options.styles.colorSet[index] = color.rgb;
         this.props.actions.graphs.updateOptions(options);
     }
 
@@ -250,6 +250,7 @@ const Graph = props => {
                     label={<Language text={content.graph.selected} />}
                     checked={options.graph.showSelectedNodeLabels}
                     onChange={value => {handleOptionChange('showSelectedNodeLabels', value)}}
+                    disabled
                 />
                 <SwitchBlock
                     label={<Language text={content.graph.hover} />}
@@ -268,6 +269,7 @@ const Graph = props => {
                     label={<Language text={content.graph.selected} />}
                     checked={options.graph.showSelectedLinkLabels}
                     onChange={value => {handleOptionChange('showSelectedLinkLabels', value)}}
+                    disabled
                 />
             </div>
             <SwitchBlock

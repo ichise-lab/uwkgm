@@ -2,7 +2,6 @@ import React from 'react';
 import { useTheme } from '@material-ui/core/styles';
 
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
-import CenterFocusStrongIcon from '@material-ui/icons/CenterFocusStrong';
 import CheckIcon from '@material-ui/icons/Check';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
@@ -16,27 +15,40 @@ import { Language } from 'services/languages/languages';
 import { LargeButton, getIconColors } from 'components/console/templates/tools';
 import { styles } from 'components/console/templates/tools.css';
 
-export class Tools extends React.Component {
-    render() {
-        return (
-            <ToolsFunc 
-                onAddModClick={this.props.onAddModClick} 
-                onReloadClick={this.props.onReloadClick}
-                onCommitClick={this.props.onCommitClick}
-            />
-        );
-    }
-}
-
-export const ToolsFunc = props => {
+export const Tools = props => {
     const classes = getStyles(styles);
     const theme = useTheme();
     const iconColors = getIconColors(theme);
     const { 
-        onAddModClick, 
+        triples,
+        selectedIds,
+        editingIds,
+        onAddClick, 
+        onEditClick,
+        onRemoveClick,
+        onSelectAllClick,
+        onCloneClick,
         onReloadClick,
         onCommitClick
     } = props;
+
+    const isUserAbsoulteDemo = window.localStorage.getItem('groups') === 'user_demo';
+
+    const shouldDisableEditButton = () => {
+        var shouldDisable = false;
+
+        if (isUserAbsoulteDemo || selectedIds.length == 0) {
+            shouldDisable = true;
+        } else {
+            for (let i = 0; i < selectedIds.length; i++) {
+                if (triples[selectedIds[i]].committed) {
+                    shouldDisable = true;
+                }
+            }
+        }
+
+        return shouldDisable
+    }
 
     return (
         <div className={classes.tools.container}>
@@ -45,24 +57,41 @@ export const ToolsFunc = props => {
                     <LargeButton 
                         icon={<AddCircleOutlineIcon />} 
                         text={<Language text={content.add} />} 
-                        onClick={onAddModClick} 
-                        disabled={window.localStorage.getItem('groups').includes('user_demo')}
+                        onClick={onAddClick} 
+                        disabled={isUserAbsoulteDemo}
                     />
                 </div>
                 <div className={classes.tools.singleBlock}>
-                    <LargeButton icon={<EditIcon />} text={<Language text={content.edit} />} disabled />
+                    <LargeButton 
+                        icon={<EditIcon />} 
+                        text={<Language text={content.edit} />} 
+                        onClick={onEditClick}
+                        disabled={shouldDisableEditButton()}
+                    />
                 </div>
                 <div className={classes.tools.singleBlock}>
-                    <LargeButton icon={<DeleteIcon />} text={<Language text={content.delete} />} disabled />
+                    <LargeButton 
+                        icon={<DeleteIcon />} 
+                        text={<Language text={content.remove} />} 
+                        onClick={onRemoveClick}
+                        disabled={shouldDisableEditButton()} 
+                    />
                 </div>
                 <div className={classes.tools.singleBlock}>
-                    <LargeButton icon={<CenterFocusStrongIcon />} text={<Language text={content.select} />} disabled />
+                    <LargeButton 
+                        icon={<SelectAllIcon />} 
+                        text={<Language text={content.all} />} 
+                        onClick={onSelectAllClick}
+                        disabled={editingIds.length > 0}
+                    />
                 </div>
                 <div className={classes.tools.singleBlock}>
-                    <LargeButton icon={<SelectAllIcon />} text={<Language text={content.all} />} disabled />
-                </div>
-                <div className={classes.tools.singleBlock}>
-                    <LargeButton icon={<FileCopyIcon />} text={<Language text={content.clone} />} disabled />
+                    <LargeButton 
+                        icon={<FileCopyIcon />} 
+                        text={<Language text={content.clone} />} 
+                        onClick={onCloneClick}
+                        disabled={isUserAbsoulteDemo || selectedIds.length != 1} 
+                    />
                 </div>
                 <div className={classes.tools.divider} />
                 <div className={classes.tools.singleBlock}>

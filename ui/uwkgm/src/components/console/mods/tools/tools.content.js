@@ -5,8 +5,8 @@ export const content = {
     add: {
         en: 'Add'
     },
-    delete: {
-        en: 'Delete'
+    remove: {
+        en: 'Remove'
     },
     edit: {
         en: 'Edit'
@@ -14,17 +14,11 @@ export const content = {
     modifier: {
         en: 'Modifier'
     },
-    select: {
-        en: 'Select'
-    },
     all: {
         en: 'All'
     },
     clone: {
         en: 'Clone'
-    },
-    remove: {
-        en: 'Remove'
     },
     reload: {
         en: 'Reload'

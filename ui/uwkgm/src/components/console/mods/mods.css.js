@@ -202,6 +202,8 @@ export const styles = {
             borderRadius: 15,
             boxShadow: '0px 0px 15px rgba(0, 0, 0, 0.1)',
             backgroundColor: theme.palette.type === 'light' ? 'white' : theme.palette.background.paper,
+            transitionDelay: '.05s',
+            transitionDuration: '.1s',
 
             '& > div:first-child': {
                 flex: '0 0 80px'
@@ -211,6 +213,16 @@ export const styles = {
                 flex: 1,
                 paddingLeft: 15
             }
+        },
+        
+        itemSelectable: {
+            cursor: 'pointer'
+        },
+
+        itemFade: {
+            opacity: .3,
+            transitionDelay: '.05s',
+            transitionDuration: '.1s'
         },
 
         itemHead: {
@@ -288,7 +300,7 @@ export const styles = {
         }
     })),
 
-    newItem: makeStyles(theme => ({
+    editItem: makeStyles(theme => ({
         container: {
             border: theme.palette.type === 'light' ? '3px dashed #F1F2F8' : '3px dashed #666',
             backgroundColor: 'rgba(0, 0, 0, 0)'

@@ -3,6 +3,7 @@ import React from 'react';
 import Button from '@material-ui/core/Button';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import Tooltip from '@material-ui/core/Tooltip';
+import { useTheme } from '@material-ui/core/styles';
 
 import { getStyles } from 'styles/styles';
 import { styles } from './tools.css';
@@ -16,8 +17,9 @@ export const getIconColors = theme => ({
 
 export const LargeButton = props => {
     const classes = getStyles(styles).button;
-    const { icon, text, disabled, onClick } = props;
-    const color = disabled ? '#888' : null;
+    const theme = useTheme();
+    const { icon, text, disabled, nonclickable, onClick } = props;
+    const color = nonclickable === 'true' ? theme.palette.text.primary : disabled ? '#888' : null;
     
     return (
         <Button className={classes.singleBlock} onClick={onClick} {...props}>

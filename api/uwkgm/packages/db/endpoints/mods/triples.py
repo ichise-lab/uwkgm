@@ -6,17 +6,17 @@ The UWKGM project
 """
 
 import os
-from datetime import datetime
-from typing import List
+from typing import Dict, List
 
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.request import Request
 
 from dorest import interfaces
 from dorest.decorators import endpoint
-from dorest.permissions import IsDemoUser, IsTrustedUser, NOT, OR
+from dorest.permissions import NOT, OR
 
 from accounts.models import CustomUser
+from accounts.permissions import IsDemoUser, IsRegularUser, IsTrustedUser
 
 
 @endpoint(['GET'], requires=[IsAuthenticated])
@@ -29,77 +29,75 @@ def find() -> List[dict]:
     return interfaces.resolve(find)()
 
 
-@endpoint(['POST'], requires=[NOT(IsDemoUser)], include_request='request')
-def add(request: Request, triple: dict, text_id: str = None) -> str:
-    """Add a document containing an add-triple modifier
+@endpoint(['POST'], requires=[OR(NOT(IsDemoUser), IsRegularUser)], include_request='request')
+def add(request: Request, triple: dict, doc_id: str = None) -> str:
+    """Add an add-triple modifier
 
     :param request: Django REST Framework's Request object (to get the issuer information)
     :param triple: (subject, predicate, object)
            :ex: ["http://dbpedia.org/resource/Barack_Obama", "http://dbpedia.org/property/birthplace", "http://dbpedia.org/resource/Hawaii"]
-    :param text_id: If the triple was extracted from a text, 'text_id' stores the reference to the original text.
+    :param doc_id: MongoDB's document ID for triple updating
     :return: Added document's id
     """
 
     document = dict({'action': 'add',
-                     'created': datetime.now(),
                      'issuer': CustomUser.objects.get_by_natural_key(request.user).username,
                      'api': os.environ['UWKGM_API_VERSION'],
-                     'triple': triple})
-
-    if text_id is not None:
-        document['textId'] = text_id
-
+                     'triple': triple,
+                     'doc_id': doc_id})
     return interfaces.resolve(add)(document)
 
 
-@endpoint(['PATCH'], requires=[NOT(IsDemoUser)], include_request='request')
-def edit(request: Request, triple: dict, original_triple: dict) -> str:
-    """Edit a document containing an edit-triple modifier
+@endpoint(['POST'], requires=[OR(NOT(IsDemoUser), IsRegularUser)], include_request='request')
+def edit(request: Request, triple: dict, original_triple: dict, doc_id: str) -> str:
+    """Add an edit-triple modifier
 
     :param request: Django REST Framework's Request object (to get the issuer information)
     :param triple: The replacing triple (subject, predicate, object)
            :ex: ["http://dbpedia.org/resource/Barack_Obama", "http://dbpedia.org/property/birthplace", "http://dbpedia.org/resource/United_States"]
     :param original_triple: The original triple to be edited (subject, predicate, object)
            :ex: ["http://dbpedia.org/resource/Barack_Obama", "http://dbpedia.org/property/birthplace", "http://dbpedia.org/resource/Hawaii"]
-    :return: Edited document's id
+    :param doc_id: MongoDB's document ID for triple updating
+    :return: Added document's id
     """
 
     document = dict({'action': 'edit',
-                     'created': datetime.now(),
                      'issuer': CustomUser.objects.get_by_natural_key(request.user).username,
                      'api': os.environ['UWKGM_API_VERSION'],
                      'triple': triple,
-                     'originalTriple': original_triple})
+                     'originalTriple': original_triple,
+                     'doc_id': doc_id})
     return interfaces.resolve(edit)(document)
 
 
-@endpoint(['POST'], requires=[NOT(IsDemoUser)], include_request='request')
-def delete(request: Request, triple: dict) -> str:
-    """Delete a document containing a delete-triple modifier
+@endpoint(['POST'], requires=[OR(NOT(IsDemoUser), IsRegularUser)], include_request='request')
+def delete(request: Request, triple: dict, doc_id: str) -> str:
+    """Add a delete-triple modifier
 
     :param request: Django REST Framework's Request object (to get the issuer information)
     :param triple: A triple to delete from the graph
            :ex: ["http://dbpedia.org/resource/Barack_Obama", "http://dbpedia.org/property/birthplace", "http://dbpedia.org/resource/Hawaii"]
-    :return: Deleted document's id
+    :param doc_id: MongoDB's document ID for triple updating
+    :return: Added document's id
     """
 
     document = dict({'action': 'delete',
-                     'created': datetime.now(),
                      'issuer': CustomUser.objects.get_by_natural_key(request.user).username,
                      'api': os.environ['UWKGM_API_VERSION'],
-                     'triple': triple})
+                     'triple': triple,
+                     'doc_id': doc_id})
     return interfaces.resolve(delete)(document)
 
 
-@endpoint(['DELETE'], requires=[NOT(IsDemoUser)])
-def remove(document_id: str) -> int:
+@endpoint(['DELETE'], requires=[OR(NOT(IsDemoUser), IsRegularUser)])
+def remove(document_ids: List[str]) -> int:
     """Remove a triple modifier
 
-    :param document_id: Document id of the triple modifier
+    :param document_ids: Document id of the triple modifier
     :return: The number of triple modifiers removed in this transaction
     """
 
-    return interfaces.resolve(remove)(document_id)
+    return interfaces.resolve(remove)(document_ids)
 
 
 @endpoint(['PATCH'], requires=[OR(IsAdminUser, IsTrustedUser)])

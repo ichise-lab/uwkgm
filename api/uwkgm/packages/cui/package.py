@@ -4,7 +4,9 @@
 """
 
 from dorest import packages
-from dorest.permissions import IsDemoUser, NOT
+from dorest.permissions import NOT
+
+from accounts.permissions import IsDemoUser
 
 packages.link(__name__)
 packages.requires(__name__, permissions=[NOT(IsDemoUser)])

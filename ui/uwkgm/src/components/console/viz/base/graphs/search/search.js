@@ -30,7 +30,7 @@ export class EntitySearchClass extends BaseEntitySearch {
         return activeIndex;
     }
 
-    handleAddClick = event => {
+    handleAddClick = () => {
         const suggestion = this.state.suggestions[this.state.selectedId];
         if (typeof suggestion !== 'undefined' && typeof suggestion.label !== 'undefined') {
             this.props.onAddNode({label: suggestion.label, entity: suggestion.entity, types: suggestion.types});
@@ -41,6 +41,10 @@ export class EntitySearchClass extends BaseEntitySearch {
                 selectedId: null
             }));
         }
+    }
+
+    handleSuggestionClick = suggestionId => {
+        this.handleSelect(suggestionId, this.handleAddClick);
     }
 
     render() {

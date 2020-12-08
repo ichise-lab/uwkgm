@@ -35,6 +35,8 @@ manage.conf() {
 }
 
 manage.conf.base() {
+    mkdir -p conf
+
     if [[ -f "conf/base" ]]; then
         echo "[UWKGM: INFO] Base configuration found. If you want to change the configuration, edit conf/base manually and restart this manager."
     else
@@ -47,6 +49,8 @@ manage.conf.base() {
 }
 
 manage.conf.databases() {
+    mkdir -p conf
+    
     if [[ -f "conf/databases" ]]; then
         echo "[UWKGM: INFO] Base configuration found. If you want to change the configuration, edit conf/databases manually and restart this manager."
     else

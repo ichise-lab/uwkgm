@@ -8,7 +8,7 @@ export const content = {
     motto: {
         en: () => (
             <React.Fragment>
-                Knowledge Graph
+                Knowledge Graphs
                 <br />
                 Intelligently Built
             </React.Fragment>

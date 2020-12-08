@@ -23,6 +23,7 @@ import VisibilityIcon from '@material-ui/icons/Visibility';
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
 import { ChromePicker } from 'react-color';
 import { List } from 'react-movable';
+import { useTheme } from '@material-ui/core/styles';
 
 import FontColorIcon from 'assets/icons/FontColor';
 import LabelBackgroundIcon from 'assets/icons/LabelBackground';
@@ -435,6 +436,7 @@ const NodeStylePopover = props => {
 
 const Manual = props => {
     const classes = getStyles(styles);
+    const theme = useTheme();
     const [selectingId, setSelectingId] = React.useState(null);
     const [ruleSelector, setRuleSelector] = React.useState(null);
     const [entitySelector, setEntitySelector] = React.useState(null);
@@ -496,6 +498,19 @@ const Manual = props => {
         }
 
         tools.rules.manual[newIndex] = temp;
+        updateTools(tools);
+    }
+
+    const handleRuleCopy = ruleId => {
+        var tools = toolReducer;
+        const newRule = JSON.parse(JSON.stringify(tools.rules.manual[ruleId]));
+        tools.rules.manual.splice(ruleId, 0, newRule);
+        updateTools(tools);
+    }
+
+    const handleRuleDelete = ruleId => {
+        var tools = toolReducer;
+        tools.rules.manual.splice(ruleId, 1);
         updateTools(tools);
     }
 
@@ -666,9 +681,10 @@ const Manual = props => {
                                         size="small" 
                                         onClick={() => onIconOpen(path => handleIconSelect(props.key, path))}
                                     >
-                                        <svg viewBox="0 0 24 24" style={{width: 24, height: 24}}>
+                                        <svg viewBox="0 0 24 24" className={classes.manual.ruleIcon}>
                                             <path 
                                                 d={value.styles.icon}
+                                                fill={theme.palette.text.primary}
                                             />
                                         </svg>
                                     </IconButton>
@@ -705,10 +721,10 @@ const Manual = props => {
                                 </Tooltip>
                             </div>
                             <div className={classes.manual.ruleDeleteBlock}>
-                                <IconButton aria-label="delete" size="small" className={classes.manual.ruleCopyButton}>
+                                <IconButton aria-label="delete" size="small" className={classes.manual.ruleCopyButton} onClick={event => {handleRuleCopy(props.key)}}>
                                     <AddToPhotosIcon />
                                 </IconButton>
-                                <IconButton aria-label="delete" size="small" className={classes.manual.ruleDeleteButton}>
+                                <IconButton aria-label="delete" size="small" className={classes.manual.ruleDeleteButton} onClick={event => {handleRuleDelete(props.key)}}>
                                     <DeleteIcon />
                                 </IconButton>
                             </div>

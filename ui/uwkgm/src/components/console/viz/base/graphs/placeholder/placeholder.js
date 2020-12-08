@@ -98,6 +98,7 @@ const PlaceholderFunc = props => {
                         type="button" 
                         className="btn btn-outline-secondary"
                         style={{color: theme.palette.text.primary}}
+                        disabled
                     >
                         Learn More
                     </button>

@@ -72,7 +72,7 @@ export const Code = props => {
     }
 
     const handleLoginClick = () => {
-        history.replace({pathname: '/login'});
+        history.replace({pathname: '/console'});
     }
 
     const handleCancelClick = () => {

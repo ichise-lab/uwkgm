@@ -23,6 +23,7 @@ import { useTheme } from '@material-ui/core/styles';
 import PuffLoader from "react-spinners/PuffLoader";
 import Modal from 'react-bootstrap/Modal'
 import BoostrapButton from 'react-bootstrap/Button';
+import { withSnackbar, useSnackbar } from 'notistack';
 
 import { apiEndpoint } from 'services/servers';
 import { content as options } from './options/options.content';
@@ -39,29 +40,143 @@ import { styles as pageStyles } from 'components/console/templates/page.css';
 import { styles, CustomTextField } from './mods.css';
 import { Tools } from './tools/tools';
 
-export default class Mods extends React.Component {
+class Mods extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
             activeScreen: 'triples',
             isAddingMod: false,
-            triples: []
+            triples: [],
+            selectedIds: [],
+            editingIds: [],
+            hoveringId: null,
+            clonedTriple: null
         };
 
         this.isComponentMounted = false;
     }
 
-    handleAddModClick = () => {
-        this.setState(() => ({isAddingMod: !this.state.isAddingMod}))
+    handleAddClick = () => {
+        this.setState(() => ({
+            isAddingMod: !this.state.isAddingMod,
+            clonedTriple: null
+        }));
     }
 
-    fetch = async () => {
+    handleEditClick = () => {
+        this.setState(() => ({
+            hoveringId: null,
+            selectedIds: [],
+            editingIds: this.state.selectedIds
+        }));
+    }
+
+    handleEditDone = itemId => {
+        var editingIds = this.state.editingIds;
+        editingIds.splice(editingIds.indexOf(itemId), 1);
+        this.setState(() => ({editingIds: editingIds}));
+    }
+
+    handleRemoveClick = () => {
+        var selectedDocIds = [];
+
+        for (let i = 0; i < this.state.selectedIds.length; i++) {
+            if (!this.state.triples[this.state.selectedIds[i]].committed) {
+                selectedDocIds.push(this.state.triples[this.state.selectedIds[i]].id);
+            }
+        }
+
         request.json({
-            url: apiEndpoint + '/databases/docs/triples/find'
+            method: 'DELETE',
+            url: apiEndpoint + '/databases/mods/triples/remove',
+            body: {
+                document_ids: selectedDocIds
+            }
         }).then(data => {
             if (this.isComponentMounted) {
-                this.setState(() => ({triples: data}));
+                this.setState(() => ({
+                    selectedIds: []
+                }));
+
+                this.fetch();
+                this.props.enqueueSnackbar('Removed ' + data + ' modifiers', 
+                                            {variant: 'success', autoHideDuration: 2000});
+            }
+        });
+    }
+
+    handleSelectAllClick = () => {
+        var selectedIds = [];
+        var shouldDeselect = true;
+
+        for (let i = 0; i < this.state.triples.length; i++) {
+            if (!this.state.triples[i].committed) {
+                selectedIds.push(i);
+            }
+        }
+
+        for (let i = 0; i < selectedIds.length; i++) {
+            if (!this.state.selectedIds.includes(selectedIds[i])) {
+                shouldDeselect = false;
+            }
+        }
+
+        this.setState(() => ({selectedIds: shouldDeselect ? [] : selectedIds}));
+    }
+
+    handleCloneClick = () => {
+        this.setState(() => ({
+            isAddingMod: true,
+            clonedTriple: this.state.triples[this.state.selectedIds[0]].triple
+        }), () => {
+            this.setState(() => ({
+                selectedIds: []
+            }));
+        });
+    }
+
+    handleReloadClick = () => {
+        this.fetch(true);
+    }
+
+    handleItemHover = itemId => {
+        if (this.state.editingIds.length === 0) {
+            this.setState(() => ({hoveringId: itemId}));
+        }
+    }
+
+    handleItemEndHover = () => {
+        if (this.state.editingIds.length === 0) {
+            this.setState(() => ({hoveringId: null}));
+        }
+    }
+
+    handleItemClick = itemId => {
+        if (this.state.editingIds.length === 0) {
+            var selectedIds = this.state.selectedIds;
+
+            if (selectedIds.includes(itemId)) {
+                selectedIds.splice(selectedIds.indexOf(itemId), 1);
+            } else {
+                selectedIds.push(itemId);
+            }
+
+            this.setState(() => ({selectedIds: selectedIds}));
+        }
+    }
+
+    fetch = async (reloading = false) => {
+        request.json({
+            url: apiEndpoint + '/databases/mods/triples/find'
+        }).then(data => {
+            if (this.isComponentMounted) {
+                this.setState(() => ({triples: data}), () => {
+                    if (reloading) {
+                        this.props.enqueueSnackbar('Reloaded', 
+                                                   {variant: 'success', autoHideDuration: 2000});
+                    }
+                });
             }
         });
     }
@@ -81,7 +196,20 @@ export default class Mods extends React.Component {
                 triples={this.state.triples}
                 isAddingMod={this.state.isAddingMod}
                 isComponentMounted={this.isComponentMounted}
-                onAddModClick={this.handleAddModClick}
+                selectedIds={this.state.selectedIds}
+                hoveringId={this.state.hoveringId}
+                editingIds={this.state.editingIds}
+                clonedTriple={this.state.clonedTriple}
+                onAddClick={this.handleAddClick}
+                onEditClick={this.handleEditClick}
+                onEditDone={this.handleEditDone}
+                onRemoveClick={this.handleRemoveClick}
+                onSelectAllClick={this.handleSelectAllClick}
+                onCloneClick={this.handleCloneClick}
+                onReloadClick={this.handleReloadClick}
+                onItemHover={this.handleItemHover}
+                onItemEndHover={this.handleItemEndHover}
+                onItemClick={this.handleItemClick}
                 fetch={this.fetch}
             />
         );
@@ -97,8 +225,21 @@ const ModsFunc = props => {
     const { 
         triples, 
         isAddingMod,
-        isComponentMounted ,
-        onAddModClick,
+        isComponentMounted,
+        selectedIds,
+        hoveringId,
+        editingIds,
+        clonedTriple,
+        onAddClick,
+        onEditClick,
+        onEditDone,
+        onRemoveClick,
+        onSelectAllClick,
+        onCloneClick,
+        onReloadClick,
+        onItemHover,
+        onItemEndHover,
+        onItemClick,
         fetch
     } = props;
 
@@ -149,13 +290,28 @@ const ModsFunc = props => {
                     triples={triples}
                     isAddingMod={isAddingMod}
                     isComponentMounted={isComponentMounted}
-                    onAddModClick={onAddModClick}
+                    selectedIds={selectedIds}
+                    hoveringId={hoveringId}
+                    editingIds={editingIds}
+                    clonedTriple={clonedTriple}
                     fetch={fetch}
+                    onItemHover={onItemHover}
+                    onItemEndHover={onItemEndHover}
+                    onItemClick={onItemClick}
+                    onAddClick={onAddClick}
+                    onEditDone={onEditDone}
                 />
             </div>
             <Tools 
-                onAddModClick={onAddModClick}
-                onReloadClick={fetch}
+                triples={triples}
+                selectedIds={selectedIds}
+                editingIds={editingIds}
+                onAddClick={onAddClick}
+                onEditClick={onEditClick}
+                onRemoveClick={onRemoveClick}
+                onSelectAllClick={onSelectAllClick}
+                onCloneClick={onCloneClick}
+                onReloadClick={onReloadClick}
                 onCommitClick={handleCommitClick}
             />
             <Options
@@ -181,8 +337,16 @@ const List = props => {
         triples, 
         isAddingMod,
         isComponentMounted,
-        onAddModClick,
-        fetch
+        selectedIds,
+        hoveringId,
+        editingIds,
+        clonedTriple,
+        fetch,
+        onAddClick,
+        onEditDone,
+        onItemHover,
+        onItemEndHover,
+        onItemClick,
     } = props;
 
     return (
@@ -199,18 +363,36 @@ const List = props => {
                     </div>
                 </div>
                 {isAddingMod ?
-                    <NewItem 
+                    <EditItem 
+                        clonedTriple={clonedTriple}
                         isComponentMounted={isComponentMounted}
-                        onAddModClick={onAddModClick}
+                        onAddClick={onAddClick}
                         fetch={fetch}
                     />
                 : ''}
+                <div onMouseLeave={onItemEndHover}>
                 {triples.map((triple, index) => (
-                    <Item 
-                        triple={triple} 
-                        key={index}
-                    />
+                    !editingIds.includes(index) ?
+                        <Item 
+                            triple={triple} 
+                            key={index}
+                            id={index}
+                            selectedIds={selectedIds}
+                            hoveringId={hoveringId}
+                            onItemHover={onItemHover}
+                            onItemClick={onItemClick}
+                        />
+                    : 
+                        <EditItem 
+                            id={index}
+                            triple={triple}
+                            isComponentMounted={isComponentMounted}
+                            fetch={fetch}
+                            onAddClick={onAddClick}
+                            onEditDone={onEditDone}
+                        />
                 ))}
+                </div>
             </div>
         : 
             <div className={classes.placeholder.body}>
@@ -237,10 +419,35 @@ const List = props => {
 
 const Item = props => {
     const classes = getStyles(styles);
-    const { triple } = props;
+    const { 
+        triple,
+        id,
+        selectedIds,
+        hoveringId,
+        onItemHover,
+        onItemClick
+    } = props;
+
+    const shouldFade = () => {
+        if (selectedIds.length > 0) {
+            if (!selectedIds.includes(id) && hoveringId !== id) {
+                return true
+            }
+        } else {
+            if (hoveringId !== null && hoveringId !== id) {
+                return true
+            }
+        }
+    }
 
     return (
-        <div className={classes.list.item}>
+        <div 
+            className={clsx([classes.list.item], 
+                            {[classes.list.itemFade]: shouldFade(),
+                             [classes.list.itemSelectable]: !triple.committed})} 
+            onMouseEnter={() => {onItemHover(id)}}
+            onClick={() => {onItemClick(id)}}
+        >
             <div>
                 {triple.action === 'add' ?
                     <div className={classes.list.itemHead}>
@@ -309,13 +516,23 @@ const Item = props => {
     );
 }
 
-const NewItem = props => {
+const EditItem = props => {
+    const { 
+        id,
+        triple,
+        clonedTriple,
+        isComponentMounted, 
+        fetch,
+        onAddClick, 
+        onEditDone
+    } = props;
+
     const classes = getStyles(styles);
-    const [tripleSelector, setTripleSelector] = React.useState({subject: null, predicate: null, object: null});
+    const [tripleSelector, setTripleSelector] = React.useState(triple ? triple.triple : clonedTriple ? clonedTriple : {subject: null, predicate: null, object: null});
     const [entitySelector, setEntitySelector] = React.useState(null);
     const [editingState, setEditingState] = React.useState({isEditing: false, triple: null});
     const [verifyState, setVerifyState] = React.useState({isVerifying: null, result: null, detail: null, code: null});
-    const { isComponentMounted, onAddModClick, fetch } = props;
+    const { enqueueSnackbar } = useSnackbar();
     
     const handleEntityClick = (event, target) => {
         setEntitySelector({
@@ -338,13 +555,25 @@ const NewItem = props => {
 
     const handleAddButtonClick = () => {
         request.json({
-            url: apiEndpoint + '/databases/docs/triples/add',
+            url: apiEndpoint + '/databases/mods/triples/add',
             method: 'POST',
             body: {
-                triple: tripleSelector
+                triple: tripleSelector,
+                doc_id: triple ? triple.id : ''
             }
         }).then(data => {
-            onAddModClick();
+            if (triple) {
+                enqueueSnackbar('Edited 1 modifer', {variant: 'success', autoHideDuration: 2000});
+            } else {
+                enqueueSnackbar('Added 1 modifer', {variant: 'success', autoHideDuration: 2000});
+            }
+
+            if (triple) {
+                onEditDone(id);
+            } else {
+                onAddClick();
+            }
+
             fetch();
         });
     }
@@ -352,14 +581,26 @@ const NewItem = props => {
     const handleEditButtonClick = () => {
         if (editingState.isEditing) {
             request.json({
-                url: apiEndpoint + '/databases/docs/triples/edit',
-                method: 'PATCH',
+                url: apiEndpoint + '/databases/mods/triples/edit',
+                method: 'POST',
                 body: {
                     triple: tripleSelector,
-                    original_triple: editingState.triple
+                    original_triple: editingState.triple,
+                    doc_id: triple ? triple.id : ''
                 }
             }).then(data => {
-                onAddModClick();
+                if (triple) {
+                    enqueueSnackbar('Edited 1 modifer', {variant: 'success', autoHideDuration: 2000});
+                } else {
+                    enqueueSnackbar('Added 1 modifer', {variant: 'success', autoHideDuration: 2000});
+                }
+
+                if (triple) {
+                    onEditDone(id);
+                } else {
+                    onAddClick();
+                }
+
                 fetch();
             });
         } else {
@@ -369,13 +610,25 @@ const NewItem = props => {
 
     const handleDeleteButtonClick = () => {
         request.json({
-            url: apiEndpoint + '/databases/docs/triples/delete',
+            url: apiEndpoint + '/databases/mods/triples/delete',
             method: 'POST',
             body: {
-                triple: tripleSelector
+                triple: tripleSelector,
+                doc_id: triple ? triple.id : ''
             }
         }).then(data => {
-            onAddModClick();
+            if (triple) {
+                enqueueSnackbar('Edited 1 modifer', {variant: 'success', autoHideDuration: 2000});
+            } else {
+                enqueueSnackbar('Added 1 modifer', {variant: 'success', autoHideDuration: 2000});
+            }
+
+            if (triple) {
+                onEditDone(id);
+            } else {
+                onAddClick();
+            }
+
             fetch();
         });
     }
@@ -384,7 +637,11 @@ const NewItem = props => {
         if (editingState.isEditing) {
             setEditingState({isEditing: false, triple: null});
         } else {
-            onAddModClick();
+            if (triple) {
+                onEditDone(id);
+            } else {
+                onAddClick();
+            }
         }
     }
 
@@ -411,7 +668,7 @@ const NewItem = props => {
 
     return (
         <React.Fragment>
-            <div className={clsx([classes.list.item, classes.newItem.container])}>
+            <div className={clsx([classes.list.item, classes.editItem.container])}>
                 <div>
                     <div className={classes.list.itemHead}>
                         {editingState.isEditing ?
@@ -420,10 +677,28 @@ const NewItem = props => {
                                 <div><Language text={content.edit} /></div>
                             </React.Fragment>
                         :
-                            <React.Fragment>
-                                <div><AddCircleOutlineIcon className={classes.mods.editingIcon} /></div>
-                                <div><Language text={content.new} /></div>
-                            </React.Fragment>
+                            triple ?
+                                triple.action === 'add' ?
+                                    <React.Fragment>
+                                        <div><AddCircleIcon className={classes.mods.editingIcon} /></div>
+                                        <div><Language text={content.add} /></div>
+                                    </React.Fragment>
+                                : triple.action === 'edit' ?
+                                    <React.Fragment>
+                                        <div><EditIcon className={classes.mods.editingIcon} /></div>
+                                        <div><Language text={content.edit} /></div>
+                                    </React.Fragment>
+                                : triple.action === 'delete' ?
+                                    <React.Fragment>
+                                        <div><RemoveCircleIcon className={classes.mods.editingIcon} /></div>
+                                        <div><Language text={content.delete} /></div>
+                                    </React.Fragment>
+                                : ''
+                            :
+                                <React.Fragment>
+                                    <div><AddCircleOutlineIcon className={classes.mods.editingIcon} /></div>
+                                    <div><Language text={content.new} /></div>
+                                </React.Fragment>
                         }
                     </div>
                 </div>
@@ -554,7 +829,7 @@ const CommitModal = props => {
 
     const handleCommitClick = () => {
         request.json({
-            url: apiEndpoint + '/databases/docs/triples/commit',
+            url: apiEndpoint + '/databases/mods/triples/commit',
             method: 'PATCH'
         }).then(data => {
             setNumCommited(data);
@@ -613,3 +888,5 @@ const CommitModal = props => {
         </Modal>
     );
 }
+
+export default withSnackbar(Mods);

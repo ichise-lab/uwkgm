@@ -48,6 +48,7 @@ export class Tools extends React.Component {
     render() {
         return (
             <ToolsFunc
+                closeRulePage={this.props.closeRulePage}
                 toggleRulePage={this.props.toggleRulePage}
             />
         );
@@ -58,23 +59,28 @@ export const ToolsFunc = props => {
     const classes = getStyles(styles);
     const theme = useTheme();
     const iconColors = getIconColors(theme);
-    const { toggleRulePage } = props;
+    const { closeRulePage, toggleRulePage } = props;
 
     const [menuEl, setMenuEl] = React.useState(null);
     const [menuKey, setMenuKey] = React.useState(null);
 
     const menus = {
         package: [
-            {text: 'Basic', icon: <MemoryIcon />}
+            {text: 'Basic', icon: <MemoryIcon />, onClick: () => {}}
         ],
         module: [
-            {text: 'Graph', icon: <ShareIcon />}
+            {text: 'Graph', icon: <ShareIcon />, onClick: () => {closeRulePage()}}
         ]
     };
 
     const handleMenuClick = (event, key) => {
         setMenuKey(key);
         setMenuEl(event.currentTarget);
+    };
+
+    const handleMenuIconClick = callback => {
+        callback();
+        handleMenuClose();
     };
 
     const handleMenuClose = () => {
@@ -86,7 +92,7 @@ export const ToolsFunc = props => {
         <div className={classes.tools.container}>
             <div className={classes.tools.content}>
                 <div className={classes.tools.singleBlock}>
-                    <LargeButton icon={<MemoryIcon />} text={<Language text={content.package.basic} />} onClick={event => {handleMenuClick(event, 'package')}} />
+                    <LargeButton icon={<MemoryIcon />} text={<Language text={content.package.basic} />} nonclickable="true" />
                 </div>
                 <div className={classes.tools.singleBlock}>
                     <LargeButton icon={<ShareIcon />} text={<Language text={content.type.graph} />} onClick={event => {handleMenuClick(event, 'module')}} />
@@ -223,7 +229,7 @@ export const ToolsFunc = props => {
                 {menuKey !== null ?
                     <List component="div" style={{minWidth: 200}}>
                         {menus[menuKey].map((item, index) => (
-                            <ListItem button key={index}>
+                            <ListItem button key={index} onClick={() => {handleMenuIconClick(item.onClick)}}>
                                 {'icon' in item && item.icon !== null ?
                                     <ListItemIcon>{item.icon}</ListItemIcon>
                                 : ''}

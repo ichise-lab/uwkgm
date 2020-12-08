@@ -92,7 +92,8 @@ export class BaseEntitySearch extends React.Component {
                     this.setState(() => ({
                         suggestions: data.items,
                         focusedId: null,
-                        selectedId: null
+                        selectedId: null,
+                        suggestionsVisible: true
                     }));
                 }
             })
@@ -130,7 +131,7 @@ export class BaseEntitySearch extends React.Component {
         this.setState(() => ({focusedId: suggestionId})) ;
     }
 
-    handleSelect = suggestionId => {
+    handleSelect = (suggestionId, callback=null) => {
         const suggestion = this.state.suggestions[suggestionId];
 
         if ('onSelect' in this.props) { 
@@ -140,7 +141,11 @@ export class BaseEntitySearch extends React.Component {
         this.setState(() => ({
             selectedId: suggestionId,
             search: suggestion.label
-        }));
+        }), () => {
+            if (callback !== null) {
+                callback();
+            }
+        });
 
         this.handleClose();
     }

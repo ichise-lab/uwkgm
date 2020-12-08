@@ -187,7 +187,8 @@ export const styles = {
     
             '& > div:nth-child(4)': {
                 flex: '0 0 60px',
-                paddingTop: 5
+                paddingTop: 5,
+                color: theme.palette.text.primary
             },
     
             '& > div:nth-child(5)': {
@@ -199,6 +200,12 @@ export const styles = {
                 flex: '0 0 70px',
                 paddingTop: 2
             }
+        },
+
+        ruleIcon: {
+            width: 24, 
+            height: 24,
+            color: theme.palette.text.primary
         },
 
         rowMovableIndicator: {

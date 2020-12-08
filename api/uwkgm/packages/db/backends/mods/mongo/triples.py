@@ -5,6 +5,7 @@ The UWKGM project
 :author: Rungsiman Nararatwong
 """
 
+from datetime import datetime
 from typing import List
 
 import pymongo
@@ -15,7 +16,7 @@ from ....endpoints import graphs
 
 
 def find() -> List[dict]:
-    """Finds multiple triple modifiers"""
+    """Find multiple triple modifiers"""
 
     triples = []
 
@@ -36,28 +37,45 @@ def find() -> List[dict]:
     return triples
 
 
-def add(document: dict) -> str:
-    """Adds a document containing an add-triple modifier"""
+def update(document: dict) -> str:
+    """Change a triple modifier"""
 
-    return str(db.docs.uwkgm['triples'].insert_one(document).inserted_id)
+    if document['doc_id'].strip('"') == '':
+        document['created'] = datetime.now()
+        return str(db.docs.uwkgm['triples'].insert_one(document).inserted_id)
+    else:
+        document['created'] = db.docs.uwkgm['triples'].find_one({'_id': ObjectId(document['doc_id'].strip('"'))}).get('created')
+        document['updated'] = datetime.now()
+        return str(db.docs.uwkgm['triples'].update_one({'_id': ObjectId(document['doc_id'].strip('"'))},
+                                                       {"$set": document},
+                                                       upsert=False).modified_count)
+
+
+def add(document: dict) -> str:
+    """Add a document containing an add-triple modifier"""
+
+    return update(document)
 
 
 def edit(document: dict) -> str:
-    """Adds a document containing an edit-triple modifier"""
+    """Add a document containing an edit-triple modifier"""
 
-    return str(db.docs.uwkgm['triples'].insert_one(document).inserted_id)
+    return update(document)
 
 
 def delete(document: dict) -> str:
-    """Adds a document containing a delete-triple modifier"""
+    """Add a document containing a delete-triple modifier"""
 
-    return str(db.docs.uwkgm['triples'].insert_one(document).inserted_id)
+    return update(document)
 
 
-def remove(document_id: str) -> int:
+def remove(document_ids: List[str]) -> int:
     """Delete a triple modifier"""
 
-    return db.docs.uwkgm['triples'].delete_one({'_id': ObjectId(document_id.strip('"'))}).deleted_count
+    # return db.docs.uwkgm['triples'].delete_one({'_id': ObjectId(document_id.strip('"'))}).deleted_count
+    return db.docs.uwkgm['triples'].delete_many({'_id': {'$in': [
+        ObjectId(document_id) for document_id in document_ids
+    ]}}).deleted_count
 
 
 def commit() -> int:

@@ -326,6 +326,7 @@ export const SwitchBlock = props => {
         label,
         checked,
         value,
+        disabled,
         onChange
     } = props;
 
@@ -344,6 +345,7 @@ export const SwitchBlock = props => {
                         size="small"
                         color={theme.palette.type === 'dark' ? 'secondary' : 'primary'}
                         className={classes.switch.switch}
+                        disabled={disabled}
                     />
                 }
                 label={
