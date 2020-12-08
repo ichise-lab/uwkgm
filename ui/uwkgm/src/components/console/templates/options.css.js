@@ -41,19 +41,19 @@ export const styles = {
         content: {
             display: 'flex',
             flexGrow: 1,
-            transition: theme.transitions.create('padding', {
+            transition: theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.leavingScreen,
             }),
-            paddingRight: 0,
+            width: '100%'
         },
     
         contentShift: {
-            transition: theme.transitions.create('padding', {
+            transition: theme.transitions.create('width', {
                 easing: theme.transitions.easing.easeOut,
                 duration: theme.transitions.duration.enteringScreen,
             }),
-            paddingRight: optionsWidth,
+            width: 'calc(100% - ' + optionsWidth + 'px)'
         },
 
         block: {

@@ -33,10 +33,10 @@ export const Demo = props => {
                             <SecurityIcon className={classes.cardIcon} />
                         </div>
                         <div className={classes.cardContentBlock}>
-                            <div>Read Only</div>
+                            <div>Limited Permissions</div>
                             <div>
                                 Your account is for demonstration only. <br />
-                                For security reasons, you will not be able to make any changes.
+                                For security reasons, you will have limited access to the platform's functionalities.
                             </div>
                         </div>
                     </div>
