@@ -18,6 +18,7 @@ import KeyboardArrowLeftIcon from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@material-ui/icons/KeyboardArrowRight';
 import RemoveCircleIcon from '@material-ui/icons/RemoveCircle';
 import SearchIcon from '@material-ui/icons/Search';
+import ToolTip from '@material-ui/core/Tooltip';
 import { useTheme } from '@material-ui/core/styles';
 
 import PuffLoader from "react-spinners/PuffLoader";
@@ -444,7 +445,7 @@ const Item = props => {
         <div 
             className={clsx([classes.list.item], 
                             {[classes.list.itemFade]: shouldFade(),
-                             [classes.list.itemSelectable]: !triple.committed})} 
+                             [classes.list.itemSelectable]: true})} 
             onMouseEnter={() => {onItemHover(id)}}
             onClick={() => {onItemClick(id)}}
         >
@@ -503,11 +504,11 @@ const Item = props => {
                     </div>
                     <div>
                         {triple.committed ?
-                            <React.Fragment>
+                            <ToolTip title="Commited. Changes not permitted.">
                                 <IconButton size="small">
                                     <CheckIcon />
                                 </IconButton>
-                            </React.Fragment>
+                            </ToolTip>
                         : ''}
                     </div>
                 </div>
@@ -527,8 +528,11 @@ const EditItem = props => {
         onEditDone
     } = props;
 
+    const editingTriple = triple ? {subject: {...triple.triple.subject}, predicate: {...triple.triple.predicate}, object: {...triple.triple.object}} : {};
+    const editingClonedTriple = clonedTriple ? {subject: {...clonedTriple.subject}, predicate: {...clonedTriple.predicate}, object: {...clonedTriple.object}} : {};
+
     const classes = getStyles(styles);
-    const [tripleSelector, setTripleSelector] = React.useState(triple ? triple.triple : clonedTriple ? clonedTriple : {subject: null, predicate: null, object: null});
+    const [tripleSelector, setTripleSelector] = React.useState(triple ? editingTriple : clonedTriple ? editingClonedTriple : {subject: null, predicate: null, object: null});
     const [entitySelector, setEntitySelector] = React.useState(null);
     const [editingState, setEditingState] = React.useState({isEditing: false, triple: null});
     const [verifyState, setVerifyState] = React.useState({isVerifying: null, result: null, detail: null, code: null});
@@ -742,7 +746,11 @@ const EditItem = props => {
                                     <div style={{display: 'inline-block', verticalAlign: 'top', marginLeft: 5}}>Verifying...</div>
                                 </React.Fragment>
                             : verifyState.code === 'triple_already_exists' ?
-                                <div>
+                                <div className={classes.list.itemWarningMessage}>
+                                    {verifyState.detail}
+                                </div>
+                            : verifyState.code === 'domain_range_fail' ?
+                                <div className={classes.list.itemErrorMessage}>
                                     {verifyState.detail}
                                 </div>
                             : verifyState.code === 'triple_verification_pass' ? 
@@ -800,7 +808,8 @@ const Entity = props => {
                 {
                     [classes.blue]: value !== null && (status === null || status === 'triple_verification_pass'),
                     [classes.green]: status === 'triple_verification_pass',
-                    [classes.orange]: status === 'triple_already_exists'
+                    [classes.orange]: status === 'triple_already_exists',
+                    [classes.red]: status === 'domain_range_fail'
                 }
             )} 
             onClick={handleButtonClick}

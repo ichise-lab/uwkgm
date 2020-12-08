@@ -202,8 +202,7 @@ export const styles = {
             borderRadius: 15,
             boxShadow: '0px 0px 15px rgba(0, 0, 0, 0.1)',
             backgroundColor: theme.palette.type === 'light' ? 'white' : theme.palette.background.paper,
-            transitionDelay: '.05s',
-            transitionDuration: '.1s',
+            transitionDuration: '.15s',
 
             '& > div:first-child': {
                 flex: '0 0 80px'
@@ -221,8 +220,7 @@ export const styles = {
 
         itemFade: {
             opacity: .3,
-            transitionDelay: '.05s',
-            transitionDuration: '.1s'
+            transitionDuration: '.15s'
         },
 
         itemHead: {
@@ -239,6 +237,14 @@ export const styles = {
                 fontSize: '.85em',
                 fontWeight: 'bold'
             }
+        },
+
+        itemWarningMessage: {
+            color: theme.palette.colors.orange
+        },
+
+        itemErrorMessage: {
+            color: theme.palette.colors.red
         },
 
         triple: {

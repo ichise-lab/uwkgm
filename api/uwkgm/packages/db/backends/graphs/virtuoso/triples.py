@@ -7,6 +7,8 @@ The UWKGM project
 
 from typing import Any, Dict, Tuple
 
+from dorest import packages
+
 from uwkgm import db
 
 
@@ -51,5 +53,10 @@ def verify(triple: Tuple[str, str, str], graph: str) -> Dict[str, Any]:
 
     if find(triple, graph):
         return {'result': False, 'detail': 'Triple already exists in the graph.', 'code': 'triple_already_exists'}
-    else:
-        return {'result': True, 'detail': 'Triple verification pass.', 'code': 'triple_verification_pass'}
+
+    if graph.startswith('http://dbpedia.org'):
+        if not packages.call('kgmt.endpoints.verification.verify.agreement.dbpedia', by=__name__)(triple, triple[1]):
+            return {'result': False, 'detail': 'Invalid domain-range agreement. '
+                                               'Try checking the predicate and object.', 'code': 'domain_range_fail'}
+
+    return {'result': True, 'detail': 'Triple verification pass.', 'code': 'triple_verification_pass'}
