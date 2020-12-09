@@ -34,7 +34,7 @@ import { Demo } from './demo/demo';
 import { getStyles } from 'styles/styles';
 import { Language, LanguageSelector } from 'services/languages/languages';
 import { Nav } from './nav/nav';
-import { ScreenLoader } from 'components/common/loaders/screen/screen';
+import { LoadingScreen } from 'components/common/loaders/screen/screen';
 import { styles } from './console.css';
 import { updateOptions } from './console.action';
 
@@ -242,17 +242,17 @@ const ConsoleFunc = props => {
                         <Dashboard />
                     </Route>
                     <Route path={`${url}/api/explorer`}>
-                        <Suspense fallback={<ScreenLoader text="Loading API explorer..." noCopyright />}>
+                        <Suspense fallback={<LoadingScreen text="Loading API explorer..." noCopyright />}>
                             <Explorer />
                         </Suspense>
                     </Route>
                     <Route path={`${url}/mods`}>
-                        <Suspense fallback={<ScreenLoader text="Loading modifiers..." noCopyright />}>
+                        <Suspense fallback={<LoadingScreen text="Loading modifiers..." noCopyright />}>
                             <Mods />
                         </Suspense>
                     </Route>
                     <Route path={`${url}/graphs/visualizer`}>
-                        <Suspense fallback={<ScreenLoader text="Loading visualizer..." noCopyright />}>
+                        <Suspense fallback={<LoadingScreen text="Loading visualizer..." noCopyright />}>
                             <Visualizer />
                         </Suspense>
                     </Route>

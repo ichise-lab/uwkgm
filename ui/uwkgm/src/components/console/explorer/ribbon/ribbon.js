@@ -11,7 +11,6 @@ import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Paper from '@material-ui/core/Paper';
 import Select from '@material-ui/core/Select';
-import Spinner from 'react-bootstrap/Spinner';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import TextField from '@material-ui/core/TextField';
@@ -124,15 +123,7 @@ export const Ribbon = props => {
                                 disabled={isProcessing}
                                 onClick={onSubmit}
                             >
-                                {(isProcessing) ?
-                                    <Spinner
-                                        as="span"
-                                        animation="grow"
-                                        size="sm"
-                                        role="status"
-                                        aria-hidden="true"
-                                    />
-                                : <Language text={content.send} />}
+                                {(isProcessing) ? '...' : <Language text={content.send} />}
                             </Button>
                         </React.Fragment>
                     </div>

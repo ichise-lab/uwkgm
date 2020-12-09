@@ -10,15 +10,16 @@ import { connect } from "react-redux";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CloseIcon from '@material-ui/icons/Close';
 import IconButton from '@material-ui/core/IconButton';
-import { SnackbarProvider, useSnackbar } from 'notistack';
 import { ThemeProvider } from "@material-ui/core/styles";
+
+import { SnackbarProvider, useSnackbar } from 'notistack';
 
 import './App.scss';
 import { auth } from 'services/auth';
 import { darkTheme, lightTheme } from 'services/themes/themes.css';
 import { Demo } from 'components/auth/demo/demo';
 import { Login } from 'components/auth/login/login';
-import { ScreenLoader } from 'components/common/loaders/screen/screen';
+import { LoadingScreen } from 'components/common/loaders/screen/screen';
 
 export class AppClass extends React.Component {
     snackbar = {
@@ -90,7 +91,7 @@ const AppFunc = (props) => {
                   <Redirect to="/home" />
                 </Route>
                 <Route path="/home">
-                    <Suspense fallback={<ScreenLoader text="Loading UWKGM..." />}>
+                    <Suspense fallback={<LoadingScreen text="Loading UWKGM..." />}>
                         <Home />
                     </Suspense>
                 </Route>
@@ -98,7 +99,7 @@ const AppFunc = (props) => {
                     <Login snackbar={snackbar} />
                 </Route>
                 <Route path="/register">
-                    <Suspense fallback={<ScreenLoader text="Loading registration page..." />}>
+                    <Suspense fallback={<LoadingScreen text="Loading registration page..." />}>
                         <Register snackbar={snackbar} />
                     </Suspense>
                 </Route>
@@ -109,7 +110,7 @@ const AppFunc = (props) => {
                     <Logout snackbar={snackbar} />
                 </Route>
                 <PrivateRoute path="/console">
-                    <Suspense fallback={<ScreenLoader text="Loading console..." />}>
+                    <Suspense fallback={<LoadingScreen text="Loading console..." />}>
                         <Console />
                     </Suspense>
                 </PrivateRoute>

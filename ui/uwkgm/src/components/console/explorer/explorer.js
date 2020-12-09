@@ -171,6 +171,11 @@ class ExplorerClass extends React.Component {
                     isProcessing: false
                 })); 
             }
+        }).catch(error => {
+            alert("An error occurred while sending the request: " + error);
+            this.setState(() => ({
+                isProcessing: false
+            })); 
         });
 
         this.setState(() => ({isProcessing: true}));

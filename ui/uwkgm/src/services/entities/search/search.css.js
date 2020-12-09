@@ -92,10 +92,9 @@ export const styles = {
         },
     
         textInput: {
-            width: '100%',
+            width: 'calc(100% - 50px)',
             padding: 10,
             border: 'none',
-            borderBottom: '1px solid #AAA',
             color: theme.palette.type === 'light' ? 'black' : 'white',
             backgroundColor: theme.palette.type === 'light' ? 'white' : theme.palette.background.paper,
     
@@ -103,6 +102,17 @@ export const styles = {
                 outline: 0,
                 backgroundColor: theme.palette.type === 'light' ? '#FAFAFA' : theme.palette.background.paper
             }
+        },
+
+        loaderBlock: {
+            display: 'inline-block',
+            opacity: 0,
+            transition: '.5s'
+        },
+
+        loaderBlockVisible: {
+            opacity: 1,
+            transition: '.5s'
         }
     }))
 }

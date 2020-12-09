@@ -6,7 +6,7 @@ import { useTheme } from "@material-ui/core/styles";
 import { getStyles } from 'styles/styles';
 import { styles } from './screen.css';
 
-export const ScreenLoader = props => {
+export const LoadingScreen = props => {
     const classes = getStyles(styles);
     const theme = useTheme();
     const { text, noCopyright } = props;

@@ -5,6 +5,9 @@ import { connect } from "react-redux";
 import CloudIcon from '@material-ui/icons/Cloud';
 import Popover from '@material-ui/core/Popover';
 import Tooltip from '@material-ui/core/Tooltip';
+import { useTheme } from '@material-ui/core/styles';
+
+import PulseLoader from "react-spinners/PulseLoader";
 
 import { apiEndpoint } from 'services/servers';
 import { getGraphURIfromName } from 'services/catalogs/catalogs';
@@ -70,7 +73,8 @@ export class BaseEntitySearch extends React.Component {
         focusedId: null,
         selectedId: null,
         suggestionsVisible: true,
-        invalidSearch: null
+        invalidSearch: null,
+        isSearching: false
     }
 
     handleInputClick = () => {
@@ -84,25 +88,32 @@ export class BaseEntitySearch extends React.Component {
         this.setState(() => ({
             search: search,
             invalidSearch: null
-        }));
-
-        if (search.length > 1) {
-            fetchSuggestions(search, getGraphURIfromName(this.props.reducers.catalogs.graph)).then(data => {
-                if (this.isComponentMounted && target.value === data.search) {
-                    this.setState(() => ({
-                        suggestions: data.items,
-                        focusedId: null,
-                        selectedId: null,
-                        suggestionsVisible: true
-                    }));
+        }), () => {
+            if (search.length > 1) {
+                setTimeout(() => {
+                if (search == this.state.search) {
+                this.setState(() => ({isSearching: true}), () => {
+                    fetchSuggestions(search, getGraphURIfromName(this.props.reducers.catalogs.graph)).then(data => {
+                        if (this.isComponentMounted && target.value === data.search) {
+                            this.setState(() => ({
+                                suggestions: data.items,
+                                focusedId: null,
+                                selectedId: null,
+                                suggestionsVisible: true,
+                                isSearching: false
+                            }));
+                        }
+                    })
+                    .catch(error => {
+                        this.setState(() => ({invalidSearch: error, isSearching: false}));
+                    });
+                });
                 }
-            })
-            .catch(error => {
-                this.setState(() => ({invalidSearch: error}));
-            });
-        } else {
-            this.setState(() => ({suggestions: null}));
-        }
+                }, 500);
+            } else {
+                this.setState(() => ({suggestions: null}));
+            }
+        });
     }
 
     handleInputKeyDown = event => {
@@ -223,6 +234,7 @@ export class EntitiSearchPopoverClass extends BaseEntitySearch {
                 suggestions={this.state.suggestions}
                 focusedId={this.state.focusedId}
                 suggestionsVisible={this.state.suggestionsVisible}
+                isSearching={this.state.isSearching}
                 onInputChange={this.handleInputChange}
                 onInputKeyDown={this.handleInputKeyDown}
                 onSuggestionClick={this.handleSuggestionClick}
@@ -236,12 +248,14 @@ export class EntitiSearchPopoverClass extends BaseEntitySearch {
 
 export const EntitySearchPopoverFunc = props => {
     const classes = getStyles(styles.popover);
+    const theme = useTheme();
 
     const {
         selector,
         suggestions,
         focusedId,
         suggestionsVisible,
+        isSearching,
         onInputChange,
         onInputKeyDown,
         onSuggestionClick,
@@ -272,6 +286,12 @@ export const EntitySearchPopoverFunc = props => {
                     onKeyDown={onInputKeyDown}
                     autoFocus 
                 />
+                <div className={clsx([classes.loaderBlock], {[classes.loaderBlockVisible]: isSearching})}>
+                    <PulseLoader 
+                        color={theme.palette.text.primary}
+                        size={10}
+                    />
+                </div>
                 <EntitySearchSuggestions 
                     suggestions={suggestions}
                     focusedId={focusedId}

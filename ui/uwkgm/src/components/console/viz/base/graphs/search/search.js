@@ -8,6 +8,8 @@ import IconButton from '@material-ui/core/IconButton';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import { useTheme } from '@material-ui/core/styles';
 
+import HashLoader from "react-spinners/HashLoader";
+
 import { BaseEntitySearch, EntitySearchSuggestions } from 'services/entities/search/search';
 import { content } from './search.content';
 import { getStyles } from 'styles/styles';
@@ -56,6 +58,8 @@ export class EntitySearchClass extends BaseEntitySearch {
                 suggestionsVisible={this.state.suggestionsVisible}
                 findSearchInSuggestions={this.findSearchInSuggestions}
                 invalidSearch={this.state.invalidSearch}
+                isSearching={this.state.isSearching}
+                isFetchingNodes={this.props.isFetchingNodes}
                 onAddClick={this.handleAddClick}
                 onInputClick={this.handleInputClick}
                 onInputChange={this.handleInputChange}
@@ -78,6 +82,8 @@ const EntitySearchFunc = props => {
         suggestionsVisible,
         findSearchInSuggestions,
         invalidSearch,
+        isSearching,
+        isFetchingNodes,
         onAddClick,
         onInputClick,
         onInputChange,
@@ -106,12 +112,20 @@ const EntitySearchFunc = props => {
                                 InputProps={{
                                     endAdornment:
                                     <InputAdornment position="end">
-                                        <IconButton
-                                            disabled={(findSearchInSuggestions() === null) ? true: false}
-                                            onClick={onAddClick}
-                                        >
-                                            <AddCircleIcon />
-                                        </IconButton>
+                                        {!isSearching && !isFetchingNodes ?
+                                            <IconButton
+                                                disabled={(findSearchInSuggestions() === null) ? true: false}
+                                                onClick={onAddClick}
+                                                style={{padding: 0}}
+                                            >
+                                                <AddCircleIcon />
+                                            </IconButton>
+                                        : 
+                                            <HashLoader 
+                                                color={theme.palette.text.primary}
+                                                size={25}
+                                            />
+                                        }
                                     </InputAdornment>
                                 }}
                                 autoFocus
