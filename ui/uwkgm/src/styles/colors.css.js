@@ -1,15 +1,3 @@
-export const brightGrey = '#888888';
-export const darkGrey = '#666666';
-export const brightBlue = '#8591BB';
-export const darkBlue = '#6E7BA6';
-export const navyBlue = '#001f3f';
-export const blue = '#0074D9';
-export const green = '#2B9B41';
-export const orange = '#FAA105';
-export const red = '#F91419';
-export const darkOrange = '#FD9A3A';
-export const purple = '#B10DC9';
-
 export const themes = {
     bright: {
         colors: {

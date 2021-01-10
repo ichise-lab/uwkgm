@@ -3,9 +3,13 @@ import { bindActionCreators } from 'redux';
 import { connect } from "react-redux";
 
 import { Api } from './api/api';
-import { updateAppBar } from '../console.action';
+import { updateAppBar } from 'components/console/console.action';
 
 export class DashboardClass extends React.Component {
+    componentDidMount() {
+        this.props.actions.console.updateAppBar({title: ['Dashboard']});
+    }
+
     render() {
         return (
             <Api />

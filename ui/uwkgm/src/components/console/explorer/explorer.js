@@ -14,6 +14,7 @@ import { Language } from 'services/languages/languages';
 import { request } from 'services/http';
 import { Ribbon } from './ribbon/ribbon';
 import { styles as pageStyles } from 'components/console/templates/page.css';
+import { updateAppBar } from 'components/console/console.action';
 
 class ExplorerClass extends React.Component {
     constructor(props) {
@@ -183,6 +184,7 @@ class ExplorerClass extends React.Component {
 
     componentDidMount() {
         this.isComponentMounted = true;
+        this.props.actions.console.updateAppBar({title: ['API Explorer']});
 
         if (!this.props.reducers.explorer.isTreeLoaded) {
             request.json({
@@ -290,6 +292,9 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
     return {
         actions: {
+            console: {
+                updateAppBar: bindActionCreators(updateAppBar, dispatch)
+            },
             explorer: {
                 init: bindActionCreators(init, dispatch),
                 updateActiveBranch: bindActionCreators(updateActiveBranch, dispatch), 

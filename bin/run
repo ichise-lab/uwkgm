@@ -35,9 +35,7 @@ manage.run() {
 manage.run.api() {
     secure.password.master
     manage.conf.secure.load "conf/$UWKGM_ENV.secrets.enc"
-    manage.packages.site.run
-
-    source api/env/bin/activate
+    # manage.packages.site.run
 
     echo "[UWKGM: INFO] Preparing the API server..."
 
@@ -62,6 +60,8 @@ manage.run.ui() {
     export REACT_APP_API_VERSION=$UWKGM_API_VERSION
     export REACT_APP_API_ENDPOINT=$UWKGM_API_ENDPOINT
     export REACT_APP_AUTH_ENDPOINT=$UWKGM_AUTH_ENDPOINT
+    export REACT_APP_DEFAULT_LANGUAGE=$UWKGM_DEFAULT_LANGUAGE
+    export REACT_APP_VISUALIZER_DEFAULT_LANGUAGE=$UWKGM_VISUALIZER_DEFAULT_LANGUAGE
 
     npm start --prefix ui/uwkgm
 }

@@ -1,9 +1,10 @@
 import os
-import sys
 from typing import Any
 
 from SPARQLWrapper import SPARQLWrapper, JSON
 from pymongo import MongoClient
+
+from dorest import conf
 
 
 class DBClient:
@@ -42,6 +43,14 @@ class GraphDBClient(DBClient):
 
 
 class Mongo(DocDBClient):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        collection = self.catalogs
+
+        if collection.find().count() == 0:
+            collection.insert_many(conf.resolve('catalogs.init'))
+
     def connect(self):
         endpoint = 'mongodb://%s%s' % (self.address, ':%d' % self.port if self.port is not None else '')
 
@@ -50,13 +59,24 @@ class Mongo(DocDBClient):
         else:
             self.connector: MongoClient = MongoClient(endpoint, username=self.username, password=self.password)
 
+    def triples(self, graph: str):
+        return super().client.uwkgm[f'graph-{graph}-triples']
+
     @property
     def client(self) -> MongoClient:
         return super().client
 
     @property
     def uwkgm(self):
-        return super().client['uwkgm']
+        return super().client.uwkgm
+
+    @property
+    def catalogs(self):
+        return super().client.uwkgm.catalogs
+
+    @property
+    def default_graph_uri(self) -> str:
+        return os.environ['UWKGM_DB_GRAPHS_DEFAULT_GRAPH']
 
 
 class Virtuoso(GraphDBClient):

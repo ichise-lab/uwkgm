@@ -3,10 +3,11 @@
 source bin/libs/os
 
 files.text.replace() {
+    REPLACE="${2//\//\/}"
+
     if [[ $UWKGM_OS_BASE == "darwin" ]]; then
-        eval "sed -i '' 's/$1/$2/g' $3"
+        eval "sed -i '' 's/$1/$REPLACE/g' $3"
     elif [[ $UWKGM_OS_BASE == "linux" ]]; then
-        eval "sed -i 's/$1/$2/g' $3"
+        eval "sed -i 's/$1/$REPLACE/g' $3"
     fi
-    
 }

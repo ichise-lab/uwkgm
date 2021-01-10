@@ -63,7 +63,7 @@ MaxStaticCursorRows		= 5000
 CheckpointAuditTrail		= 0
 AllowOSCalls			= 0
 SchedulerInterval		= 10
-DirsAllowed			= ., /usr/local/virtuoso-opensource/share/virtuoso/vad, /ext
+DirsAllowed			= ., /usr/local/virtuoso-opensource/share/virtuoso/vad, /import
 ThreadCleanupInterval		= 10
 ThreadThreshold			= 10
 ResourcesCleanupInterval	= 10
@@ -218,8 +218,8 @@ Segment2			= 100M, db-seg2-1.db
 [Zero Config]
 ServerName			= virtuoso (D602566B774E)
 ;ServerDSN			= ZDSN
-;SSLServerName			=
-;SSLServerDSN			=
+;SSLServerName			= 
+;SSLServerDSN			= 
 
 
 [Mono]
@@ -238,7 +238,7 @@ DefaultHost			= localhost:8890
 [SPARQL]
 ;ExternalQuerySource		= 1
 ;ExternalXsltSource 		= 1
-;DefaultGraph      		    = {{UWKGM_PKG_VIRTUOSO_DEFAULT_GRAPH}}
+;DefaultGraph      		= {{UWKGM_DB_GRAPHS_DEFAULT_GRAPH}}
 ;ImmutableGraphs    		= http://localhost:8890/dataspace
 ResultSetMaxRows           	= 10000
 MaxQueryCostEstimationTime 	= 400	; in seconds

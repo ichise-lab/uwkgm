@@ -11,17 +11,13 @@ import ButtonGroup from '@material-ui/core/ButtonGroup';
 import DeleteIcon from '@material-ui/icons/Delete';
 import FormatSizeIcon from '@material-ui/icons/FormatSize';
 import IconButton from '@material-ui/core/IconButton';
-import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import LineWeightIcon from '@material-ui/icons/LineWeight';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
 import Popover from '@material-ui/core/Popover';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import Tooltip from '@material-ui/core/Tooltip';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
-import { ChromePicker } from 'react-color';
 import { List } from 'react-movable';
 import { useTheme } from '@material-ui/core/styles';
 
@@ -31,10 +27,13 @@ import LabelBorderIcon from 'assets/icons/LabelBorder';
 import NodeBorderIcon from 'assets/icons/NodeBorder';
 import NodeColorIcon from 'assets/icons/NodeColor';
 
+import { ColorPopover, Selector, SelectorMenu } from 'templates/forms/forms';
 import { EntitySearchPopover } from 'services/entities/search/search';
+import { EntitySelector } from 'services/entities/selector/selector';
 import { getStyles } from 'styles/styles';
 import { init, updateTools } from '../graphs.action';
 import { styles } from './rules.css';
+import { styles as formStyles} from 'templates/forms/forms.css';
 
 const IconPicker = React.lazy(() => import('components/console/viz/base/graphs/rules/icons/icons'));
 
@@ -164,120 +163,6 @@ const RulesFunc = props => {
                 </Suspense>
             : ''}
         </React.Fragment>
-    );
-}
-
-const Selector = props => {
-    const classes = getStyles(styles.form);
-    const {
-        choices,
-        value,
-        onClick
-    } = props;
-
-    const handleButtonClick = event => {
-        onClick(event, choices, value);
-    }
-
-    return (
-        <button className={clsx([classes.block, classes.select])} onClick={handleButtonClick}>
-            <span>{'title' in choices[value] ? choices[value].title : choices[value]}</span>
-            <KeyboardArrowDownIcon style={{fontSize: '1em'}} />
-        </button>
-    );
-}
-
-const SelectorMenu = props => {
-    const { 
-        selector,
-        onClose
-    } = props;
-
-    return (
-        <Menu
-            anchorEl={Boolean(selector) ? selector.element : null}
-            keepMounted
-            open={Boolean(selector)}
-            onClose={onClose}
-        >
-            {Boolean(selector) ?
-                Object.keys(selector.choices).map((key, index) => (
-                    <MenuItem 
-                        key={index}
-                        selected={selector.value === key}
-                        disabled={selector.choices[key].disabled}
-                        onClick={() => selector.onSelect(key)}
-                        dense
-                    >{'title' in selector.choices[key] ? selector.choices[key].title : selector.choices[key]}</MenuItem>
-                ))
-            : ''}
-        </Menu>
-    );
-}
-
-const Entity = props => {
-    const classes = getStyles(styles.form);
-    const {
-        value,
-        onClick
-    } = props;
-
-    const handleButtonClick = event => {
-        onClick(event, value);
-    }
-
-    return (
-        <button 
-            className={clsx([classes.block, classes.select, classes.entity], {[classes.entityEmpty]: value === null})} 
-            onClick={handleButtonClick}
-        >
-            {value === null ? 
-                <span style={{paddingLeft: 10, paddingRight: 10}}>...</span>
-            :
-                value.label !== null ?
-                    <span>{value.label}</span>
-                :
-                    <span>{value.entity}</span>
-            }
-            <KeyboardArrowDownIcon style={{fontSize: '1em'}} />
-        </button>
-    );
-}
-
-const ColorPopover = props => {
-    const {
-        selector,
-        onSelect,
-        onClose,
-        initColor
-    } = props;
-
-    const [color, setColor] = React.useState(initColor || {r: 0, g: 0, b: 0, a: 1});
-
-    const handleColorChange = newColor => {
-        onSelect(newColor);
-        setColor(newColor.rgb);
-    }
-
-    return (
-        <Popover
-            anchorEl={Boolean(selector) ? selector : null}
-            open={Boolean(selector)}
-            onClose={onClose}
-            anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'center',
-            }}
-            transformOrigin={{
-                vertical: 'top',
-                horizontal: 'center',
-            }}
-        >
-            <ChromePicker 
-                color={color}
-                onChange={handleColorChange}
-            />
-        </Popover>
     );
 }
 
@@ -436,6 +321,7 @@ const NodeStylePopover = props => {
 
 const Manual = props => {
     const classes = getStyles(styles);
+    const formClasses = getStyles(formStyles.form);
     const theme = useTheme();
     const [selectingId, setSelectingId] = React.useState(null);
     const [ruleSelector, setRuleSelector] = React.useState(null);
@@ -457,7 +343,7 @@ const Manual = props => {
 
         tools.rules.manual.push({
             rule: ['node', 'ofType'],
-            values: [null, null],
+            values: [{entity: {uri: null, label: null}}, {entity: {uri: null, label: null}}],
             visible: true,
             styles: {
                 icon: null,
@@ -519,14 +405,15 @@ const Manual = props => {
             element: event.currentTarget, 
             choices: choices,
             value: value,
-            onSelect: value => handleRuleSelectorSelect(level, choices, value, ruleId)
+            ruleId: ruleId,
+            level: level
         });
     }
 
-    const handleRuleSelectorSelect = (level, choices, value, ruleId) => {
-        if (typeof ruleId !== 'undefined') {
+    const handleRuleSelectorSelect = value => {
+        if (ruleSelector !== null) {
             var tools = toolReducer;
-            tools.rules.manual[ruleId].rule[level] = choices[value].value;
+            tools.rules.manual[ruleSelector.ruleId].rule[ruleSelector.level] = value;
             updateTools(tools);
         }
 
@@ -550,9 +437,9 @@ const Manual = props => {
         setEntitySelector(null);
     }
 
-    const handleEntitySelect = (entity) => {
+    const handleEntitySelect = entity => {
         var tools = toolReducer;
-        tools.rules.manual[entitySelector.ruleId].values[entitySelector.level] = entity;
+        tools.rules.manual[entitySelector.ruleId].values[entitySelector.level] = {entity: {uri: entity.uri, label: entity.label}};
         updateTools(tools);
     }
 
@@ -630,8 +517,8 @@ const Manual = props => {
                             <div>
                                 <Selector
                                     choices={{
-                                        node: {title: 'Node', value: 'node'},
-                                        link: {title: 'Link', value: 'link', disabled: true}
+                                        node: {title: 'Node'},
+                                        link: {title: 'Link', disabled: true}
                                     }}
                                     value={value.rule[0]}
                                     onClick={(event, choices, value) => handleRuleSelectorClick(event, 0, choices, value, props.key)}
@@ -639,29 +526,29 @@ const Manual = props => {
                                 <Selector
                                     ruleId={props.key}
                                     choices={{
-                                        ofType: {title: 'of type', value: 'ofType'},
-                                        labeled: {title: 'labeled', value: 'labeled', disabled: true},
-                                        hasLink: {title: 'has link', value: 'hasLink', disabled: true},
-                                        hasAttr: {title: 'has attribute', value: 'hasAttr', disabled: true},
-                                        notApplicable: {title: 'not applicable to any rules', value: 'notApplicable'}
+                                        ofType: {title: 'of type'},
+                                        labeled: {title: 'labeled', disabled: true},
+                                        hasLink: {title: 'has link', disabled: true},
+                                        hasAttr: {title: 'has attribute', disabled: true},
+                                        notApplicable: {title: 'not applicable to any rules'}
                                     }}
                                     value={value.rule[1]}
                                     onClick={(event, choices, value) => handleRuleSelectorClick(event, 1, choices, value, props.key)}
                                 />
                                 {value.rule[1] === 'ofType' ?
                                     <React.Fragment>
-                                        <Entity value={value.values[0]} onClick={(event, value) => handleEntityClick(event, value, props.key, 0)} />
+                                        <EntitySelector element={value.values[0]} onClick={(event, value) => handleEntityClick(event, value, props.key, 0)} />
                                     </React.Fragment>
                                 : value.rule[1] === 'hasLink' ?
                                     <React.Fragment>
-                                        <button className={clsx([classes.form.block, classes.form.label])}>
+                                        <button className={clsx([formClasses.block, formClasses.label])}>
                                             <span>of entity</span>
                                         </button>
-                                        <Entity value={value.values[0]} onClick={(event, value) => handleEntityClick(event, value, props.key, 0)} />
-                                        <button className={clsx([classes.form.block, classes.form.label])}>
+                                        <EntitySelector element={value.values[0]} onClick={(event, value) => handleEntityClick(event, value, props.key, 0)} />
+                                        <button className={clsx([formClasses.block, formClasses.label])}>
                                             <span>to</span>
                                         </button>
-                                        <Entity value={value.values[1]} onClick={(event, value) => handleEntityClick(event, value, props.key, 1)} />
+                                        <EntitySelector element={value.values[1]} onClick={(event, value) => handleEntityClick(event, value, props.key, 1)} />
                                     </React.Fragment>
                                 : ''}
                             </div>
@@ -744,7 +631,10 @@ const Manual = props => {
                 </div>
             </div>
             <SelectorMenu
-                selector={ruleSelector}
+                selector={ruleSelector !== null ? ruleSelector.element : null}
+                choices={ruleSelector !== null ? ruleSelector.choices : null}
+                value={ruleSelector !== null ? ruleSelector.value : null}
+                onSelect={handleRuleSelectorSelect}
                 onClose={handleRuleSelectorClose}
             />
             {Boolean(entitySelector) ?

@@ -1,4 +1,9 @@
-export const updateCatalog = graph => ({
-    type: 'UPDATE_CATALOG',
-    payload: {graph}
+export const updateCatalogs = catalogs => ({
+    type: 'UPDATE_CATALOGS',
+    payload: {catalogs}
+});
+
+export const updateActiveCatalog = name => ({
+    type: 'UPDATE_ACTIVE_CATALOG',
+    payload: {name}
 });

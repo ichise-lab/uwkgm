@@ -3,28 +3,48 @@
 source bin/libs/args
 source bin/libs/inputs
 source bin/libs/files
+source conf/databases
 source packages/virtuoso/package
 
 packages.virtuoso.install() {
     while true;
     do
         CHOICES=(
+            "Run a docker container"
             "Deploy Virtuoso in a Kubernetes cluster"
         )
 
         VALUES=(
+            docker
             kube
         )
 
         args.pull INSTALL
-        inputs.choices INSTALL "Install Virtuoso" "Choose installation" "kube" "$INSTALL" "${CHOICES[@]}" "${VALUES[@]}"
+        inputs.choices INSTALL "Install Virtuoso" "Choose installation" "docker" "$INSTALL" "${CHOICES[@]}" "${VALUES[@]}"
 
-        if [[ $INSTALL == "kube" ]]; then
+        if [[ $INSTALL == "docker" ]]; then
+            packages.virtuoso.install.docker
+        elif [[ $INSTALL == "kube" ]]; then
             packages.virtuoso.install.kube
         elif [[ $INSTALL == "cancel" ]]; then
             return
         fi
     done
+}
+
+packages.virtuoso.install.docker() {
+    docker run --name uwkgm-virtuoso \
+        --memory=32g \
+        -p 8890:8890 -p 1111:1111 \
+        -e DBA_PASSWORD=dba \
+        -e SPARQL_UPDATE=true \
+        -e DEFAULT_GRAPH=$UWKGM_DB_GRAPHS_DEFAULT_GRAPH \
+        -e VIRT_Parameters_DirsAllowed="., /usr/local/virtuoso-opensource/share/virtuoso/vad, /import" \
+        -e VIRT_Parameters_NumberOfBuffers=$UWKGM_PKG_VIRTUOSO_NUM_BUFFERS \
+        -e VIRT_Parameters_MaxDirtyBuffers=$UWKGM_PKG_VIRTUOSO_DIRTY_BUFFERS \
+        -v $UWKGM_DB_GRAPHS_HOST_PATH:/data \
+        -v $UWKGM_DB_GRAPHS_IMPORT_PATH:/import \
+        -d tenforce/virtuoso
 }
 
 packages.virtuoso.install.kube() {

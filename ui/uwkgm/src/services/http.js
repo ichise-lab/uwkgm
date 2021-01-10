@@ -70,7 +70,11 @@ request.json = props => {
 
         if ('body' in props) {
             for (let [key, value] of Object.entries(props.body)) {
-                params[key] = JSON.stringify(value);
+                if (typeof value === 'string' || value instanceof String) {
+                    params[key] = value;
+                } else {
+                    params[key] = JSON.stringify(value);
+                }
             }
         }
 

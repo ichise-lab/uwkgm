@@ -44,14 +44,24 @@ export const styles = {
             fontSize: '.9em',
             fontWeight: 'bold',
             overflow: 'hidden',
-            textOverflow: 'ellipsis'
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+        },
+
+        sectionTitle: {
+            color: theme.palette.text.secondary,
+            fontSize: '.8em',
+            textTransform: 'uppercase',
+            textAlign: 'center',
+            marginLeft: 30
         },
     
-        entity: {
+        uri: {
             color: theme.palette.text.secondary,
             fontSize: '.85em',
             overflow: 'hidden',
-            textOverflow: 'ellipsis'
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
         },
     
         typeContainer: {

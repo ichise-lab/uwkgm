@@ -179,7 +179,7 @@ inputs.text() {
     while true;
     do
         if [[ $TEXT_HAS_DEFAULT == true ]]; then
-            read -r -p "[UWKGM: INPUT] $TEXT_MESSAGE [Press Enter to skip]: " TEXT_INPUT
+            read -r -p "[UWKGM: INPUT] $TEXT_MESSAGE [Press Enter/Return to skip]: " TEXT_INPUT
         else
             read -r -p "[UWKGM: INPUT] $TEXT_MESSAGE: " TEXT_INPUT
         fi

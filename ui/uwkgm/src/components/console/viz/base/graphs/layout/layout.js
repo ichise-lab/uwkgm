@@ -53,12 +53,12 @@ export const Layout = props => {
                 </IconButton>
             </Tooltip>
             <Tooltip title={<Language text={content.lock} />} placement="top" arrow>
-                <IconButton aria-label="fullscreen" size="small" style={{opacity: .3}} disabled>
+                <IconButton aria-label="fullscreen" size="small" style={{opacity: .3}}>
                     <LockIcon style={{color: theme.palette.text.primary}} />
                 </IconButton>
             </Tooltip>
             <Tooltip title={<Language text={content.fullscreen} />} placement="top" arrow>
-                <IconButton aria-label="shrink" size="small" style={{opacity: .3}} disabled>
+                <IconButton aria-label="shrink" size="small" style={{opacity: .3}}>
                     <FullscreenIcon style={{color: theme.palette.text.primary}} />
                 </IconButton>
             </Tooltip>

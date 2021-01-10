@@ -62,77 +62,6 @@ export const styles = {
         }
     })),
 
-    form: makeStyles(theme => ({
-        block: {
-            display: 'inline-block',
-            padding: 3,
-            paddingLeft: 15,
-            paddingRight: 10,
-            marginRight: 5,
-            marginTop: 5,
-            marginBottom: 5,
-            borderRadius: 5,
-            color: '#EEE',
-            backgroundColor: '#666',
-            fontSize: '.8em',
-            fontWeight: 'bold',
-            border: 'none',
-            transition: '.2s',
-    
-            '&:hover': {
-                transition: '.2s',
-                backgroundColor: '#888'
-            }
-        },
-
-        button: {
-            cursor: 'pointer',
-            fontSize: '1em'
-        },
-
-        select: {
-            cursor: 'pointer'
-        },
-        
-        red: {
-            backgroundColor: theme.palette.colors.red,
-
-            '&:hover': {
-                backgroundColor: 'rgba(200, 50, 37, 1)'
-            }
-        },
-
-        orange: {
-            color: '#333',
-            backgroundColor: theme.palette.colors.orange,
-
-            '&:hover': {
-                color: 'white',
-                backgroundColor: 'rgba(155, 104, 44, 1)'
-            }
-        },
-
-        blue: {
-            backgroundColor: theme.palette.colors.blue,
-    
-            '&:hover': {
-                backgroundColor: 'rgba(3, 90, 166, 1)'
-            }
-        },
-
-        green: {
-            backgroundColor: 'rgba(40, 167, 69, 1)',
-    
-            '&:hover': {
-                backgroundColor: 'rgba(41, 123, 53, 1)'
-            }
-        },
-
-        entityEmptyLabel: {
-            opacity: .5
-        }
-    })),
-
     head: makeStyles(theme => ({
         container: {
             display: 'flex',
@@ -196,12 +125,9 @@ export const styles = {
             width: '100%',
             marginLeft: 'auto',
             marginRight: 'auto',
-            marginBottom: 20,
+            marginBottom: 10,
             padding: 15,
-            border: theme.palette.type === 'light' ? '1px solid #F1F2F8' : '1px solid #666',
-            borderRadius: 15,
-            boxShadow: '0px 0px 15px rgba(0, 0, 0, 0.1)',
-            backgroundColor: theme.palette.type === 'light' ? 'white' : theme.palette.background.paper,
+            borderRadius: 5,
             transitionDuration: '.15s',
 
             '& > div:first-child': {
@@ -221,6 +147,14 @@ export const styles = {
         itemFade: {
             opacity: .3,
             transitionDuration: '.15s'
+        },
+
+        itemHover: {
+            backgroundColor: theme.palette.type === 'light' ? 'rgba(0, 0, 0, .9)' : 'rgba(0, 0, 0, .2)'
+        },
+
+        itemSelected: {
+            backgroundColor: theme.palette.type === 'light' ? theme.palette.colors.blue : '#BB2C32'
         },
 
         itemHead: {
@@ -247,7 +181,13 @@ export const styles = {
             color: theme.palette.colors.red
         },
 
+        iconSelected: {
+            color: 'white'
+        },
+
         triple: {
+            width: '100%',
+            
             '& > div': {
                 display: 'inline-block',
                 width: '30%',
@@ -258,23 +198,38 @@ export const styles = {
         tripleItem: {
             width: '100%',
             verticalAlign: 'top',
-        
-            '& > div': {
-                width: '100%',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-            },
-    
-            '& > div:first-child': {
-                color: theme.palette.text.primary,
-                fontSize: '.9em',
-                fontWeight: 'bold'
-            },
-    
-            '& > div:last-child': {
-                color: theme.palette.text.primary,
-                fontSize: '.85em'
-            }
+        },
+
+        entityBlock: {
+            width: '100%',
+            maxWidth: 500,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+        },
+
+        entityURI: {
+            color: theme.palette.text.primary,
+            fontSize: '.85em'
+        },
+
+        entityLabel: {
+            color: theme.palette.text.primary,
+            fontSize: '.9em',
+            fontWeight: 'bold'
+        },
+
+        entityLiteral: {
+            marginTop: 5,
+            paddingTop: 5,
+            color: theme.palette.text.primary,
+            fontSize: '.85em',
+            borderTop: theme.palette.type === 'light' ? '1px solid rgba(0, 0, 0, .1)' : '1px solid rgba(255, 255, 255, .1)'
+        },
+
+        entityLanguage: {
+            color: theme.palette.text.primary,
+            fontSize: '.85em'
         },
 
         meta: {
@@ -285,7 +240,7 @@ export const styles = {
             paddingTop: 10,
             color: '#AAA',
             fontSize: '.8em',
-            borderTop: '1px dashed #DDD',
+            borderTop: theme.palette.type === 'light' ? '1px dashed rgba(0, 0, 0, .3)' : '1px dashed rgba(255, 255, 255, .3)',
     
             '& > b': {
                 color: theme.palette.text.primary
@@ -302,14 +257,42 @@ export const styles = {
                 '& > button': {
                     marginLeft: 5
                 }
-            } 
+            }
+        },
+
+        metaSelected: {
+            color: 'rgba(255, 255, 255, .8)'
+        },
+
+        entityEmptyLabel: {
+            opacity: .5
         }
     })),
 
     editItem: makeStyles(theme => ({
         container: {
-            border: theme.palette.type === 'light' ? '3px dashed #F1F2F8' : '3px dashed #666',
-            backgroundColor: 'rgba(0, 0, 0, 0)'
+            backgroundColor: 'rgba(0, 0, 0, .2)'
+        },
+
+        literalBlock: {
+            width: '100%',
+            marginTop: 10
+        },
+
+        literalTextBox: {
+            width: '100%'
+        },
+
+        loaderBlock: {
+            display: 'inline-block',
+            verticalAlign: 'middle',
+            opacity: 0,
+            transition: '.5s'
+        },
+
+        loaderBlockVisible: {
+            opacity: 1,
+            transition: '.5s'
         }
     })),
 

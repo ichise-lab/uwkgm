@@ -39,7 +39,11 @@ export class GraphsClass extends React.Component {
         this.setState(() => ({isFetchingNodes: true}), () => {
             request.json({ 
                 url: apiEndpoint + '/cui/graphs/entities/find',
-                params: {entities: JSON.stringify(entities), limit: this.props.reducers.graphs.options.graph.fetchLimit}
+                params: {
+                    entities: JSON.stringify(entities), 
+                    query_limit: this.props.reducers.graphs.options.graph.fetchLimit,
+                    graph: this.props.reducers.catalogs.active
+                }
             }).then(data => {
                 if (this.isComponentMounted) {
                     var graph = this.props.reducers.graphs.graph;
@@ -273,6 +277,7 @@ const makeLabelfromURI = entity => {
 const mapStateToProps = state => {
     return {
         reducers: {
+            catalogs: state.catalogReducer,
             console: state.consoleReducer,
             graphs: state.vizBaseGraphReducer
         }

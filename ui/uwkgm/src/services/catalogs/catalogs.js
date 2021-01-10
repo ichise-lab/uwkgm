@@ -1,63 +1,61 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { connect } from "react-redux";
 
 import IconButton from '@material-ui/core/IconButton';
 import LayersIcon from '@material-ui/icons/Layers';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 
+import { apiEndpoint } from 'services/servers';
 import { getStyles } from 'styles/styles';
+import { request } from 'services/http';
 import { styles } from './catalogs.css';
-import { updateCatalog } from './catalogs.action';
+import { updateCatalogs } from './catalogs.action';
 
-/*
-const getDefaultGraph = () => {
-    var defaultGraph = graphConfig[0].name;
+export const fetchCatalogs = catalogActions => {
+    var promise = new Promise((resolve, reject) => {
+        request.json({
+            url: apiEndpoint + '/databases/mods/catalogs/find'
+        }).then(catalogs => {
+            catalogActions.updateCatalogs(catalogs);
 
-    graphConfig.map(graph => {
-        if (graph.default) {
-            defaultGraph = graph.name;
-        }
-        return null;
+            if (catalogs.length > 0) {
+                catalogActions.updateActiveCatalog(catalogs[0].name);
+            }
+
+            resolve(catalogs);
+        }).catch(error => {
+            reject(error);
+        });
     });
 
-    return defaultGraph;
+    return promise;
 }
-*/
 
-//export const graphConfig = jsyaml.load(process.env.REACT_APP_CONFIG_DATABASE).graphs
-//export const initGraph = window.localStorage.getItem('graph') || getDefaultGraph();
-
-// CATALOG
-
-export const catalogConfig = [
-    {name: 'dbpedia', title: 'DBpedia', uri: 'http://dbpedia.org'}
-];
-export const initGraph = 'http://dbpedia.org';
-// export const initGraph = 'http://jpcovid19.uwkgm.com';
-
-export const getGraphURIfromName = name => {
-    /*
-    var uri = null;
-
-    graphConfig.map(graph => {
-        if (graph.name === name) {
-            uri = graph.uri;
+export const getActiveCatalog = catalogReducer => {
+    for (let i = 0; i < catalogReducer.catalogs.length; i++) {
+        if (catalogReducer.active === catalogReducer.catalogs[i].name) {
+            return catalogReducer.catalogs[i];
         }
-        return null;
-    });
+    }
 
-    return uri;
-    */
-    
-    return name;
+    return null;
 }
 
-export const CatalogSelector = props => {
-    const dispatch = useDispatch();
+class CatalogSelectorClass extends React.Component {
+    render() {
+        return (
+            <CatalogSelectorFunc 
+                catalogReducer={this.props.reducers.catalogs}
+            />
+        );
+    }
+}
+
+const CatalogSelectorFunc = props => {
     const classes = getStyles(styles.catalogs);
-    const { className } = props;
-    const { catalog } = useSelector(state => ({catalog: state.catalogReducer.catalog}));
+    const { catalogReducer } = props;
     const [ catalogAnchor, setCatalogAnchor ] = React.useState(null);
 
     const handleCatalogButtonClick = event => {
@@ -69,15 +67,15 @@ export const CatalogSelector = props => {
     };
 
     const handleCatalogUpdate = catalog => {
-        window.localStorage.setItem('catalog', catalog);
-        dispatch(updateCatalog(catalog));
+        // window.localStorage.setItem('catalog', catalog);
+        // dispatch(updateCatalogs(catalog));
         handleCatalogMenuClose();
     }
 
     return (
         <React.Fragment>
             <IconButton aria-label="catalog" onClick={handleCatalogButtonClick}>
-                <LayersIcon className={className} />
+                <LayersIcon />
             </IconButton>
             <Menu
                 anchorEl={catalogAnchor}
@@ -85,30 +83,50 @@ export const CatalogSelector = props => {
                 open={Boolean(catalogAnchor)}
                 onClose={handleCatalogMenuClose}
             >
-                {
-                    catalogConfig.map((cat, index) => (
+                {catalogReducer.catalogs !== null ?
+                    catalogReducer.catalogs.map((catalog, index) => (
                         <MenuItem 
                             key={index}
-                            onClick={() => handleCatalogUpdate(cat.name)}>
+                            onClick={() => handleCatalogUpdate(catalog.name)}>
                                 {
-                                    catalog === cat.name ? 
+                                    catalogReducer.active === catalog.name ? 
                                         <div>
                                             <b>
-                                                <div className={classes.title}>{cat.title}</div>
-                                                <div className={classes.uri}>{cat.uri}</div>
+                                                <div className={classes.title}>{catalog.title}</div>
+                                                <div className={classes.uri}>{catalog.uri}</div>
                                             </b>
                                         </div>
                                     :
                                         <div>
-                                            <div className={classes.title}>{cat.title}</div>
-                                            <div className={classes.uri}>{cat.uri}</div>
+                                            <div className={classes.title}>{catalog.title}</div>
+                                            <div className={classes.uri}>{catalog.uri}</div>
                                         </div>
                                 }
                                 
                         </MenuItem>
                     ))
-                }
+                : ''}
             </Menu>
         </React.Fragment>
     );
 }
+
+const mapStateToProps = state => {
+    return {
+        reducers: {
+            catalogs: state.catalogReducer
+        }
+    };
+}
+
+const mapDispatchToProps = dispatch => {
+    return {
+        actions: {
+            catalogs: {
+                updateCatalogs: bindActionCreators(updateCatalogs, dispatch)
+            }
+        }
+    };
+}
+
+export const CatalogSelector = connect(mapStateToProps, mapDispatchToProps)(CatalogSelectorClass);

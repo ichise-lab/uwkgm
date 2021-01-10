@@ -28,8 +28,8 @@ const convertRGBA = color => {
 
 const verifyManualRule = (node, nodes, rule) => {
     if (rule.rule[0] === 'node') {
-        if (rule.rule[1] === 'ofType' && rule.values[0] !== null) {
-            const type = rule.values[0].entity;
+        if (rule.rule[1] === 'ofType' && rule.values[0].entity.uri !== null) {
+            const type = rule.values[0].entity.uri;
 
             if (type in nodes) {
                 const typeId = nodes[type].id;

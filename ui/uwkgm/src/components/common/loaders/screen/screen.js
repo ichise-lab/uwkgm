@@ -1,5 +1,6 @@
 import React from 'react';
 
+import FadeLoader from "react-spinners/FadeLoader";
 import GridLoader from "react-spinners/GridLoader";
 import { useTheme } from "@material-ui/core/styles";
 
@@ -9,15 +10,21 @@ import { styles } from './screen.css';
 export const LoadingScreen = props => {
     const classes = getStyles(styles);
     const theme = useTheme();
-    const { text, noCopyright } = props;
+    const { text, noCopyright, loader } = props;
 
     return (
         <div className={classes.screen.body}>
             <div className={classes.screen.container}>
                 <div className={classes.screen.spinner}>
-                    <GridLoader 
-                        color={theme.palette.text.primary}
-                    />
+                    {loader === 'fade' ?
+                        <FadeLoader 
+                            color={theme.palette.text.primary}
+                        />
+                    :
+                        <GridLoader 
+                            color={theme.palette.text.primary}
+                        />
+                    }
                 </div>
                 <div className={classes.screen.text}>
                     {text}

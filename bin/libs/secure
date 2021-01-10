@@ -1,29 +1,29 @@
 #!/bin/bash
 
 secure.password.new() {
-    password_a=
-    password_b=
+    PASSWORD_A=
+    PASSWORD_B=
 
-    while [[ $password_a == "" || $password_a != "$password_b" ]];
+    while [[ $PASSWORD_A == "" || $PASSWORD_A != "$PASSWORD_B" ]];
     do
-        read -r -s -p "[UWKGM: INPUT] Enter a new master password: " password_a
+        read -r -s -p "[UWKGM: INPUT] Enter a new master password: " PASSWORD_A
         echo "********"
 
-        if [[ $password_a == "" ]]; then
+        if [[ $PASSWORD_A == "" ]]; then
             echo "[UWKGM: ERROR]: Master password cannot be empty."
             echo ""
         else
-            read -r -s -p "[UWKGM: INPUT] Confirm master password: " password_b
+            read -r -s -p "[UWKGM: INPUT] Confirm master password: " PASSWORD_B
             echo "********"
 
-            if [[ $password_a != "$password_b" ]]; then
+            if [[ $PASSWORD_A != "$PASSWORD_B" ]]; then
                 echo "[UWKGM: ERROR] Passwords mismatch."
                 echo ""
             fi
         fi
     done
 
-    password=$password_a
+    password=$PASSWORD_A
 }
 
 secure.password.master() {
@@ -37,23 +37,23 @@ secure.password.master() {
         if [[ -f "private/auth.enc" ]]; then
             while [[ $UWKGM_MASTER_PASSWORD == "" ]];
             do
-                read -r -s -p "[UWKGM: INPUT] Enter the UWKGM platform's master password: " password
+                read -r -s -p "[UWKGM: INPUT] Enter the UWKGM platform's master password: " PASSWORD
                 echo "********"
 
-                DECRYPT_RESULT="$(openssl enc -d -aes-256-cbc -md sha512 -pbkdf2 -iter 100000 -k "$password" -in private/auth.enc &> /dev/null)" || DECRYPT_RESULT="ERROR"
+                DECRYPT_RESULT="$(openssl enc -d -aes-256-cbc -md sha512 -pbkdf2 -iter 100000 -k "$PASSWORD" -in private/auth.enc &> /dev/null)" || DECRYPT_RESULT="ERROR"
 
                 if [[ $DECRYPT_RESULT == "ERROR" ]]; then
                     echo "[UWKGM: ERROR] Invalid password."
                     echo ""
                 else
-                    UWKGM_MASTER_PASSWORD="$password"
+                    UWKGM_MASTER_PASSWORD="$PASSWORD"
                 fi
             done
 
         else
             echo "[UWKGM: INFO] The UWKGM platform requires that you set a master password to encrypt credentials and secrets."
             secure.password.new
-            UWKGM_MASTER_PASSWORD="$password"
+            UWKGM_MASTER_PASSWORD="$PASSWORD"
 
             echo "VALID" > private/auth.tmp
             openssl enc -aes-256-cbc -md sha512 -pbkdf2 -iter 100000 -salt -k "$UWKGM_MASTER_PASSWORD" -in private/auth.tmp -out private/auth.enc

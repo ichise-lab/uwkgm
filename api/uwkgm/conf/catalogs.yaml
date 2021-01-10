@@ -1,0 +1,27 @@
+init:
+  - name: dbpedia
+    title: DBpedia
+    description: DBpedia 2016-10
+    uri: http://dbpedia.org
+    standard: rdf
+    permissions:
+      - group: user_regular
+        allow:
+          - read
+          - write
+      - group: user_demo
+        allow:
+          - read
+    predicates:
+      labels:
+        - name: rdfs:label
+          uri: http://www.w3.org/2000/01/rdf-schema#label
+        - name: foaf:name
+          uri: http://xmlns.com/foaf/0.1/name
+        - name: dbp:name
+          uri: http://dbpedia.org/property/name
+        - name: dbo:title
+          uri: http://dbpedia.org/ontology/title
+      types:
+        - name: rdf:type
+          uri: http://www.w3.org/1999/02/22-rdf-syntax-ns#type

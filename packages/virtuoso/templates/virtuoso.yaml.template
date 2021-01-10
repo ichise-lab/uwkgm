@@ -109,12 +109,12 @@ spec:
           volumeMounts:
             - name: uwkgm-virtuoso-storage
               mountPath: /data
-            - name: uwkgm-virtuoso-ext-storage
-              mountPath: /ext
+            - name: uwkgm-virtuoso-import-storage
+              mountPath: /import
       volumes:
         - name: uwkgm-virtuoso-storage
           persistentVolumeClaim:
             claimName: uwkgm-virtuoso-claim
-        - name: uwkgm-virtuoso-ext-storage
+        - name: uwkgm-virtuoso-import-storage
           persistentVolumeClaim:
-            claimName: uwkgm-virtuoso-ext-claim
+            claimName: uwkgm-virtuoso-import-claim

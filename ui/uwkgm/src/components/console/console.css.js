@@ -52,6 +52,16 @@ export const styles = {
             flexGrow: 1
         },
 
+        toolbarTitleDot: {
+            marginLeft: 10,
+            marginRight: 5
+        },
+
+        toolbarTitleText: {
+            fontSize: '.9em',
+            color: theme.palette.text.secondary
+        },
+
         menuButton: {
             marginRight: theme.spacing(2),
         },

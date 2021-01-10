@@ -9,7 +9,6 @@ import {
     useRouteMatch
 } from "react-router-dom";
 import { useHistory } from "react-router-dom";
-import { useSelector } from 'react-redux';
 
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import AppBar from '@material-ui/core/AppBar';
@@ -22,26 +21,30 @@ import LockIcon from '@material-ui/icons/Lock';
 import Menu from '@material-ui/core/Menu';
 import MenuIcon from '@material-ui/icons/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
+import ShareIcon from '@material-ui/icons/Share';
 import Toolbar from '@material-ui/core/Toolbar';
 import TuneIcon from '@material-ui/icons/Tune';
 import Typography from '@material-ui/core/Typography';
 import { useTheme } from "@material-ui/core/styles";
 
-import { CatalogSelector } from 'services/catalogs/catalogs';
+import { CatalogSelector, getActiveCatalog } from 'services/catalogs/catalogs';
 import { content } from './console.content';
 import { Dashboard } from './dashboard/dashboard';
 import { Demo } from './demo/demo';
+import { fetchCatalogs } from 'services/catalogs/catalogs';
 import { getStyles } from 'styles/styles';
 import { Language, LanguageSelector } from 'services/languages/languages';
 import { Nav } from './nav/nav';
 import { LoadingScreen } from 'components/common/loaders/screen/screen';
 import { styles } from './console.css';
+import { updateActiveCatalog, updateCatalogs } from 'services/catalogs/catalogs.action';
 import { updateOptions } from './console.action';
 
 export const initState = {
     appBar: {
         color: null,
-        backgroundColor: null
+        backgroundColor: null,
+        title: null
     },
     page: {
         padding: null,
@@ -63,9 +66,11 @@ export class ConsoleClass extends React.Component {
             contentBgColor: 'white'
         };
 
+        this.Catalogs = React.lazy(() => import('./catalogs/catalogs'));
         this.Explorer = React.lazy(() => import('./explorer/explorer'));
         this.Mods = React.lazy(() => import('./mods/mods'));
         this.Visualizer = React.lazy(() => import('./viz/viz'));
+        this.isComponentMounted = false;
     }
 
     handleNavOpen = () => {
@@ -101,17 +106,26 @@ export class ConsoleClass extends React.Component {
     }
 
     componentDidMount() {
+        this.isComponentMounted = true;
         this.setAppBarColor('white');
+        fetchCatalogs(this.props.actions.catalogs);
+    }
+
+    componentWillUnmount() {
+        this.isComponentMounted = false;
     }
 
     render() {
         return (
             <ConsoleFunc 
+                consoleReducer={this.props.reducers.console}
+                catalogReducer={this.props.reducers.catalogs}
                 isNavOpen={this.state.isNavOpen}
                 onNavOpen={this.handleNavOpen}
                 onNavClose={this.handleNavClose}
                 isOptionOpen={this.props.reducers.console.options.isOpen}
                 onOptionOpen={this.handleOptionOpen}
+                Catalogs={this.Catalogs}
                 Explorer={this.Explorer}
                 Mods={this.Mods}
                 Visualizer={this.Visualizer}
@@ -121,18 +135,20 @@ export class ConsoleClass extends React.Component {
 }
 
 const ConsoleFunc = props => {
-    const reducer = useSelector(state => state.consoleReducer);
     const theme = useTheme();
     const classes = getStyles(styles.console);
     const history = useHistory();
 
     const { url } = useRouteMatch();
     const {
+        consoleReducer,
+        catalogReducer,
         isNavOpen,
         onNavOpen,
         onNavClose,
         isOptionOpen,
         onOptionOpen,
+        Catalogs,
         Explorer,
         Mods,
         Visualizer
@@ -142,16 +158,16 @@ const ConsoleFunc = props => {
     const [showedDemoIntro, setShowedDemoIntro] = React.useState(false);
 
     const appBarStyles = {
-        color: reducer.appBar.color === null ? theme.palette.text.primary : reducer.appBar.color,
-        backgroundColor: reducer.appBar.backgroundColor === null ? theme.palette.background.appBar : reducer.appBar.backgroundColor
+        color: consoleReducer.appBar.color === null ? theme.palette.text.primary : consoleReducer.appBar.color,
+        backgroundColor: consoleReducer.appBar.backgroundColor === null ? theme.palette.background.appBar : consoleReducer.appBar.backgroundColor
     }
     
     const buttonStyles = {
-        color: reducer.appBar.color === null ? theme.palette.text.primary : reducer.appBar.color,
+        color: consoleReducer.appBar.color === null ? theme.palette.text.primary : consoleReducer.appBar.color,
     }
 
     const pageStyles = {
-        backgroundColor: reducer.page.backgroundColor === null ? theme.palette.background.default : reducer.page.backgroundColor
+        backgroundColor: consoleReducer.page.backgroundColor === null ? theme.palette.background.default : consoleReducer.page.backgroundColor
     }
 
     const handleAccountMenuOpen = event => {
@@ -172,102 +188,121 @@ const ConsoleFunc = props => {
     }
 
     return (
-        <div className={classes.root}>
-            <AppBar
-                position="fixed"
-                className={clsx(classes.appBar, {[classes.appBarShift]: isNavOpen,})} 
-                style={appBarStyles}
-            >
-                <Toolbar className={classes.toolbar}>
-                    <IconButton
-                        color="inherit"
-                        aria-label="open drawer"
-                        onClick={onNavOpen}
-                        edge="start"
-                        className={clsx(classes.menuButton, isNavOpen && classes.hide)} >
-                        <MenuIcon />
-                    </IconButton>
-                    <Typography variant="h6" noWrap className={classes.toolbarTitle}>
-                        <Language text={content.appBar.console} />
-                    </Typography>
-                    <div>
-                        <LanguageSelector style={buttonStyles} />
-                        <CatalogSelector style={buttonStyles} />
-                        <IconButton aria-label="account" onClick={handleAccountMenuOpen}>
-                            <AccountCircleIcon style={buttonStyles}  />
+        catalogReducer.catalogs === null ?
+            <LoadingScreen text="Loading console..." />
+        :
+            <div className={classes.root}>
+                <AppBar
+                    position="fixed"
+                    className={clsx(classes.appBar, {[classes.appBarShift]: isNavOpen,})} 
+                    style={appBarStyles}
+                >
+                    <Toolbar className={classes.toolbar}>
+                        <IconButton
+                            color="inherit"
+                            aria-label="open drawer"
+                            onClick={onNavOpen}
+                            edge="start"
+                            className={clsx(classes.menuButton, isNavOpen && classes.hide)} >
+                            <MenuIcon />
                         </IconButton>
-                        {!isOptionOpen ?
-                            <IconButton aria-label="options" onClick={onOptionOpen}>
-                                <TuneIcon style={buttonStyles} />
+                        <Typography variant="h6" noWrap className={classes.toolbarTitle}>
+                            <Language text={content.appBar.console} /> 
+                            {consoleReducer.appBar.title !== null ?
+                                consoleReducer.appBar.title.map((text, id) => (
+                                    <React.Fragment key={id}>
+                                        <span className={classes.toolbarTitleDot}>&middot; </span>
+                                        <span className={classes.toolbarTitleText}>{text}</span>
+                                    </React.Fragment>
+                                ))
+                            : '' }
+                        </Typography>
+                        <div>
+                            <LanguageSelector style={buttonStyles} />
+                            <CatalogSelector style={buttonStyles} />
+                            <IconButton aria-label="account" onClick={handleAccountMenuOpen}>
+                                <AccountCircleIcon style={buttonStyles}  />
                             </IconButton>
-                        : ''}
-                        <Menu 
-                            anchorEl={accountEl}
-                            open={Boolean(accountEl)}
-                            onClose={handleAccountMenuClose}
-                            keepMounted
-                        >
-                            <MenuItem onClick={handleAccountMenuClose}>
-                                <ListItemIcon>
-                                    <LockIcon />
-                                </ListItemIcon>
-                                <ListItemText primary="Manage" />
-                            </MenuItem>
-                            <MenuItem onClick={handleLogOut}>
-                                <ListItemIcon>
-                                    <CallMadeIcon />
-                                </ListItemIcon>
-                                <ListItemText primary="Log out" />
-                            </MenuItem>
-                        </Menu>
-                    </div>
-                </Toolbar>
-            </AppBar>
-            <Nav 
-                isNavOpen={isNavOpen}
-                onNavClose={onNavClose}
-            />
-            <div 
-                className={
-                    clsx(classes.content, {
-                        [classes.contentShift]: isNavOpen,
-                    })}
-                style={pageStyles}
-            >
-                <Switch>
-                    <Route exact path={`${url}/`}>
-                        <Redirect to={`${url}/home/dashboard`} />
-                    </Route>
-                    <Route path={`${url}/home/dashboard`}>
-                        <Dashboard />
-                    </Route>
-                    <Route path={`${url}/api/explorer`}>
-                        <Suspense fallback={<LoadingScreen text="Loading API explorer..." noCopyright />}>
-                            <Explorer />
-                        </Suspense>
-                    </Route>
-                    <Route path={`${url}/mods`}>
-                        <Suspense fallback={<LoadingScreen text="Loading modifiers..." noCopyright />}>
-                            <Mods />
-                        </Suspense>
-                    </Route>
-                    <Route path={`${url}/graphs/visualizer`}>
-                        <Suspense fallback={<LoadingScreen text="Loading visualizer..." noCopyright />}>
-                            <Visualizer />
-                        </Suspense>
-                    </Route>
-                </Switch>
+                            {!isOptionOpen ?
+                                <IconButton aria-label="options" onClick={onOptionOpen}>
+                                    <TuneIcon style={buttonStyles} />
+                                </IconButton>
+                            : ''}
+                            <Menu 
+                                anchorEl={accountEl}
+                                open={Boolean(accountEl)}
+                                onClose={handleAccountMenuClose}
+                                keepMounted
+                            >
+                                <MenuItem onClick={handleAccountMenuClose}>
+                                    <ListItemIcon>
+                                        <LockIcon />
+                                    </ListItemIcon>
+                                    <ListItemText primary="Manage" />
+                                </MenuItem>
+                                <MenuItem onClick={handleLogOut}>
+                                    <ListItemIcon>
+                                        <CallMadeIcon />
+                                    </ListItemIcon>
+                                    <ListItemText primary="Log out" />
+                                </MenuItem>
+                            </Menu>
+                        </div>
+                    </Toolbar>
+                </AppBar>
+                <Nav 
+                    isNavOpen={isNavOpen}
+                    onNavClose={onNavClose}
+                />
+                <div 
+                    className={
+                        clsx(classes.content, {
+                            [classes.contentShift]: isNavOpen,
+                        })}
+                    style={pageStyles}
+                >
+                    <Switch>
+                        <Route exact path={`${url}/`}>
+                            <Redirect to={`${url}/home/dashboard`} />
+                        </Route>
+                        <Route path={`${url}/home/dashboard`}>
+                            <Dashboard />
+                        </Route>
+                        <Route path={`${url}/catalogs`}>
+                            <Suspense fallback={<LoadingScreen text="Loading catalogs..." noCopyright />}>
+                                <Catalogs />
+                            </Suspense>
+                        </Route>
+                        <Route path={`${url}/api/explorer`}>
+                            <Suspense fallback={<LoadingScreen text="Loading API explorer..." noCopyright />}>
+                                <Explorer />
+                            </Suspense>
+                        </Route>
+                        <Route path={`${url}/mods`}>
+                            <Suspense fallback={<LoadingScreen text="Loading modifiers..." noCopyright />}>
+                                <Mods />
+                            </Suspense>
+                        </Route>
+                        <Route path={`${url}/graphs/visualizer`}>
+                            <Suspense fallback={<LoadingScreen text="Loading visualizer..." noCopyright />}>
+                                <Visualizer />
+                            </Suspense>
+                        </Route>
+                    </Switch>
+                </div>
+                <StatusBar 
+                    activeCatalog={getActiveCatalog(catalogReducer)}
+                />
+                {window.localStorage.getItem('groups').includes('user_demo') && window.localStorage.getItem('showed_demo_intro') !== 'true' && !showedDemoIntro ?
+                    <Demo onClose={handleDemoIntroClose} />
+                : ''}
             </div>
-            <StatusBar />
-            {window.localStorage.getItem('groups').includes('user_demo') && window.localStorage.getItem('showed_demo_intro') !== 'true' && !showedDemoIntro ?
-                <Demo onClose={handleDemoIntroClose} />
-            : ''}
-        </div>
     );
 }
 
 const StatusBar = props => {
     const classes = getStyles(styles.statusBar);
+    const { activeCatalog }  = props;
 
     return (
         <div className={classes.container}>
@@ -275,6 +310,12 @@ const StatusBar = props => {
                 Ready
             </div>
             <div className={classes.right}>
+                {activeCatalog !== null ?
+                    <React.Fragment>
+                        <div><ShareIcon className={classes.icon} /></div>
+                        <div>{activeCatalog.title}</div>
+                    </React.Fragment>
+                : ''}
                 <div><AccountCircleIcon className={classes.icon} /></div>
                 <div>{window.localStorage.getItem('email')}</div>
                 {window.localStorage.getItem('groups').includes('user_demo') ?
@@ -291,7 +332,8 @@ const StatusBar = props => {
 const mapStateToProps = state => {
     return {
         reducers: {
-            console: state.consoleReducer
+            console: state.consoleReducer,
+            catalogs: state.catalogReducer
         }
     };
 }
@@ -301,6 +343,10 @@ const mapDispatchToProps = dispatch => {
         actions: {
             console: {
                 updateOptions: bindActionCreators(updateOptions, dispatch)
+            },
+            catalogs: {
+                updateCatalogs: bindActionCreators(updateCatalogs, dispatch),
+                updateActiveCatalog: bindActionCreators(updateActiveCatalog, dispatch)
             }
         }
     };

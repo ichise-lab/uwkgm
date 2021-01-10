@@ -5,7 +5,6 @@ The UWKGM project
 :author: Rungsiman Nararatwong
 """
 
-import os
 from typing import Dict, List, Union
 
 from rest_framework.permissions import IsAuthenticated
@@ -33,30 +32,29 @@ PREDICATES = {
 
 
 @endpoint(['GET'], requires=[IsAuthenticated])
-def find(entities: List[str], language: str = 'en', limit: int = None, query_limit: Union[int, None] = None,
-         predicates: Dict[str, Dict[str, Union[Dict[str, str], str]]] = PREDICATES, include_incomings: bool = True, include_outgoings: bool = True,
-         graph: str = os.environ['UWKGM_DB_GRAPHS_DEFAULT_GRAPH']) -> Dict[str, List[Dict[str, str]]]:
+def find(entities: List[str], graph: str, language: str = 'en', query_limit: Union[int, None] = None,
+         predicates: Dict[str, Dict[str, Union[Dict[str, str], str]]] = PREDICATES, include_incomings: bool = True,
+         include_outgoings: bool = True) -> Dict[str, List[Dict[str, str]]]:
     """Find triples of which the given entity is a subject or an object
 
     :param entities: A list of entities to be used to find the triples
+    :param graph: Graph URI
     :param language: A language filter for the candidates' labels
-    :param limit: The maximum number of returned triples
     :param query_limit: The maximum number of candidates specified in the database query command
     :param predicates: Predicates to be included in a query (See the default variable PREDICATES for its structure)
     :param include_incomings: Include entities' incoming links (triples)
     :param include_outgoings: Include entities' outgoing links (triples)
-    :param graph: Graph URI
     :return: Lists of triples pertaining to the entity's role ({'subject': [...], 'predicate': [...], 'object': [...]})
     """
     
-    return interfaces.resolve(find)(graph, entities, language, limit, query_limit, predicates,
+    return interfaces.resolve(find)(graph, entities, language, query_limit, predicates,
                                     include_incomings, include_outgoings)
 
 
 @endpoint(['GET'], requires=[IsAuthenticated])
-def candidates(search: str, language: str = 'en', limit: Union[int, None] = 50, query_limit: Union[int, None] = None,
+def candidates(search: str, graph: str, limit: Union[int, None] = 50, query_limit: Union[int, None] = None,
                label_entities: List[str] = LABEL_ENTITIES, type_entities: str = TYPE_ENTITIES, have_types_only: bool = True,
-               perfect_match_only: bool = False, graph: str = os.environ['UWKGM_DB_GRAPHS_DEFAULT_GRAPH'])\
+               perfect_match_only: bool = False)\
         -> Dict[str, List[Dict[str, Union[str, List[str]]]]]:
     """Find candidates of entities given a partial or full label
 
@@ -66,32 +64,31 @@ def candidates(search: str, language: str = 'en', limit: Union[int, None] = 50, 
         The 'partial_matches' are candidates which labels partially match the search label
 
     :param search: Search term (URI or partial/full label)
+    :param graph: Graph URI
     :param limit: The maximum number of candidates in each of the response lists
-    :param language: A language filter for the candidates' labels
     :param query_limit: The maximum number of candidates specified in the database query command
     :param label_entities: Entities of predicate 'label'
     :param type_entities: Entities of predicate 'type'
     :param have_types_only: Find only candidates that have types
     :param perfect_match_only: Find only candidates that exactly match the search label
-    :param graph: Graph URI
     :return: The three lists of candidates ({"exact_matches": ..., "first_matches": ..., "partial_matches": ...})
     """
 
-    return interfaces.resolve(candidates)(graph, search, language, limit, query_limit, label_entities, type_entities, 
+    return interfaces.resolve(candidates)(graph, search, limit, query_limit, label_entities, type_entities,
                                           have_types_only, perfect_match_only)
 
 
 @endpoint(['GET'], requires=[IsAuthenticated])
-def candidates_aggregated(labels: List[str], language: str = 'en', query_limit: int = None,
-                          perfect_match_only: bool = True, graph: str = os.environ['UWKGM_DB_GRAPHS_DEFAULT_GRAPH']) \
+def candidates_aggregated(labels: List[str], graph: str, language: str = 'en', query_limit: int = None,
+                          perfect_match_only: bool = True) \
         -> Dict[str, int]:
     """List numbers of candidates that exactly match the given labels
 
     :param labels: A list of labels
+    :param graph: Graph URI
     :param language: A language filter for the candidates' labels
     :param query_limit: The maximum number of candidates specified in the database query command
     :param perfect_match_only: Find only candidates that exactly match the search label
-    :param graph: Graph URI
     :return: A dictionary containing the labels and their numbers of candidates
     """
 
@@ -103,3 +100,17 @@ def candidates_aggregated(labels: List[str], language: str = 'en', query_limit: 
                                                perfect_match_only=perfect_match_only, graph=graph)['exact_matches'])
 
     return aggregated
+
+
+@endpoint(['GET'], requires=[IsAuthenticated])
+def entity(subject: str, graph: str, label_entities: List[str] = LABEL_ENTITIES, type_entities: str = TYPE_ENTITIES,):
+    """Find objects or an attribute given subject and predicate
+
+    :param subject: Subject URI
+    :param graph: Graph URI
+    :param label_entities: Entities of predicate 'label'
+    :param type_entities: Entities of predicate 'type'
+    :return: A list of objects or an attribute value
+    """
+
+    return interfaces.resolve(entity)(graph, subject, label_entities, type_entities)

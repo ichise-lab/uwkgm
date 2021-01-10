@@ -15,12 +15,12 @@ from uwkgm import db
 from ....endpoints import graphs
 
 
-def find() -> List[dict]:
+def find(graph: str) -> List[dict]:
     """Find multiple triple modifiers"""
 
     triples = []
 
-    for triple in db.docs.uwkgm['triples'].find().sort('created', pymongo.DESCENDING):
+    for triple in db.docs.triples(graph).find().sort('created', pymongo.DESCENDING):
         document = {'id': str(triple.get('_id')),
                     'action': triple.get('action'),
                     'triple': triple.get('triple'),
@@ -37,71 +37,101 @@ def find() -> List[dict]:
     return triples
 
 
-def update(document: dict) -> str:
+def update(document: dict, graph: str) -> str:
     """Change a triple modifier"""
 
-    if document['doc_id'].strip('"') == '':
+    if document['doc_id'] == '':
         document['created'] = datetime.now()
-        return str(db.docs.uwkgm['triples'].insert_one(document).inserted_id)
+        document['doc_id'] = ''
+        return str(db.docs.triples(graph).insert_one(document).inserted_id)
     else:
-        document['created'] = db.docs.uwkgm['triples'].find_one({'_id': ObjectId(document['doc_id'].strip('"'))}).get('created')
+        document['created'] = db.docs.triples(graph).find_one({'_id': ObjectId(document['doc_id'])}).get('created')
         document['updated'] = datetime.now()
-        return str(db.docs.uwkgm['triples'].update_one({'_id': ObjectId(document['doc_id'].strip('"'))},
-                                                       {"$set": document},
-                                                       upsert=False).modified_count)
+        return str(db.docs.triples(graph).update_one({'_id': ObjectId(document['doc_id'])},
+                                                     {"$set": document}, upsert=False).modified_count)
 
 
-def add(document: dict) -> str:
+def add(graph: str, issuer: str, api: str, triple: dict, doc_id: str) -> str:
     """Add a document containing an add-triple modifier"""
 
-    return update(document)
+    document = dict({'action': 'add',
+                     'issuer': issuer,
+                     'api': api,
+                     'triple': triple,
+                     'doc_id': doc_id})
+
+    return update(document, graph)
 
 
-def edit(document: dict) -> str:
+def edit(graph: str, issuer: str, api: str, triple: dict, original_triple: dict, doc_id: str) -> str:
     """Add a document containing an edit-triple modifier"""
 
-    return update(document)
+    document = dict({'action': 'edit',
+                     'issuer': issuer,
+                     'api': api,
+                     'triple': triple,
+                     'originalTriple': original_triple,
+                     'doc_id': doc_id})
+
+    return update(document, graph)
 
 
-def delete(document: dict) -> str:
+def delete(graph: str, issuer: str, api: str, triple: dict, doc_id: str) -> str:
     """Add a document containing a delete-triple modifier"""
 
-    return update(document)
+    document = dict({'action': 'delete',
+                     'issuer': issuer,
+                     'api': api,
+                     'triple': triple,
+                     'doc_id': doc_id})
+
+    return update(document, graph)
 
 
-def remove(document_ids: List[str]) -> int:
+def remove(document_ids: List[str], graph: str) -> int:
     """Delete a triple modifier"""
 
-    # return db.docs.uwkgm['triples'].delete_one({'_id': ObjectId(document_id.strip('"'))}).deleted_count
-    return db.docs.uwkgm['triples'].delete_many({'_id': {'$in': [
+    return db.docs.triples(graph).delete_many({'_id': {'$in': [
         ObjectId(document_id) for document_id in document_ids
     ]}}).deleted_count
 
 
-def commit() -> int:
+def commit(graph: str, graph_uri: str) -> int:
     """Commit triple modifiers that have not been committed before to the graph database"""
 
     n_changes = 0
 
-    for triple in db.docs.uwkgm['triples'].find():
+    for triple in db.docs.triples(graph).find():
         if 'committed' not in triple:
             if triple.get('action') == 'add':
                 t = triple.get('triple')
-                graphs.triples.add((t['subject']['entity'], t['predicate']['entity'], t['object']['entity']))
+                graphs.triples.add((t['subject']['entity']['uri'],
+                                    t['predicate']['entity']['uri'],
+                                    t['object']['entity']['uri']),
+                                   graph_uri)
                 n_changes += 1
 
             elif triple.get('action') == 'delete':
                 t = triple.get('triple')
-                graphs.triples.delete((t['subject']['entity'], t['predicate']['entity'], t['object']['entity']))
+                graphs.triples.delete((t['subject']['entity']['uri'],
+                                       t['predicate']['entity']['uri'],
+                                       t['object']['entity']['uri']),
+                                      graph_uri)
                 n_changes += 1
 
             elif triple.get('action') == 'edit':
                 origin = triple.get('originalTriple')
                 target = triple.get('triple')
-                graphs.triples.delete((origin['subject']['entity'], origin['predicate']['entity'], origin['object']['entity']))
-                graphs.triples.add((target['subject']['entity'], target['predicate']['entity'], target['object']['entity']))
+                graphs.triples.delete((origin['subject']['entity']['uri'],
+                                       origin['predicate']['entity']['uri'],
+                                       origin['object']['entity']['uri']),
+                                      graph_uri)
+                graphs.triples.add((target['subject']['entity']['uri'],
+                                    target['predicate']['entity']['uri'],
+                                    target['object']['entity']['uri']),
+                                   graph_uri)
                 n_changes += 1
 
-            db.docs.uwkgm['triples'].update({'_id': triple.get('_id')}, {'$set': {'committed': True}})
+            db.docs.triples(graph).update({'_id': triple.get('_id')}, {'$set': {'committed': True}})
 
     return n_changes

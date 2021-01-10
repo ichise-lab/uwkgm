@@ -45,10 +45,16 @@ export const content = [
                     },
                     {
                         title: {
-                            en: 'Database',
+                            en: 'Databases',
                             jp: 'データベース'
                         },
                         locked: true
+                    },
+                    {
+                        title: {
+                            en: 'Catalogs',
+                        },
+                        link: '/console/catalogs'
                     }
                 ]
             },

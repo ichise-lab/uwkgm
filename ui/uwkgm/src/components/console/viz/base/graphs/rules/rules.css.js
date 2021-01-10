@@ -66,62 +66,6 @@ export const styles = {
         }
     })),
 
-    form: makeStyles(theme => ({
-        block: {
-            display: 'inline-block',
-            padding: 3,
-            paddingLeft: 15,
-            paddingRight: 10,
-            marginRight: 5,
-            marginTop: 5,
-            marginBottom: 5,
-            borderRadius: 5,
-            color: '#EEE',
-            backgroundColor: '#666',
-            fontSize: '.8em',
-            fontWeight: 'bold',
-            border: 'none',
-            transition: '.2s',
-    
-            '&:hover': {
-                transition: '.2s',
-                backgroundColor: '#888'
-            }
-        },
-
-        label: {
-            paddingLeft: 5,
-            paddingRight: 5,
-            color: theme.palette.text.primary,
-            backgroundColor: 'white',
-    
-            '&:hover': {
-                backgroundColor: 'white'
-            }
-        },
-
-        select: {
-            cursor: 'pointer'
-        },
-
-        entity: {
-            backgroundColor: 'rgba(40, 167, 69, 1)',
-            cursor: 'pointer',
-    
-            '&:hover': {
-                backgroundColor: 'rgba(41, 123, 53, 1)'
-            }
-        },
-
-        entityEmpty: {
-            backgroundColor: theme.palette.colors.blue,
-    
-            '&:hover': {
-                backgroundColor: 'rgba(3, 90, 166, 1)'
-            }
-        }
-    })),
-
     manual: makeStyles(theme => ({
         headContainer: {
             display: 'flex',
@@ -130,6 +74,8 @@ export const styles = {
             fontSize: '.9em',
             fontWeight: 'bold',
             marginTop: 20,
+            paddingBottom: 10,
+            borderBottom: theme.palette.type === 'light' ? '1px solid rgba(0, 0, 0, .05)' : '1px solid rgba(255, 255, 255, .05)',
     
             '& > div:first-child': {
                 flex: '0 0 45px'
@@ -164,14 +110,17 @@ export const styles = {
             display: 'flex',
             padding: 10,
             paddingLeft: 12,
-            marginTop: 10,
+            paddingTop: 10,
+            paddingBottom: 10,
             marginLeft: 10,
             marginRight: 10,
-            border: '1px solid ' + theme.palette.divider,
-            borderRadius: 15,
-            boxShadow: '0px 0px 15px rgba(0, 0, 0, .2)',
-            backgroundColor: theme.palette.type === 'light' ? 'white' : theme.palette.background.paper,
-    
+            borderRadius: 5,
+            borderBottom: theme.palette.type === 'light' ? '1px solid rgba(0, 0, 0, .05)' : '1px solid rgba(255, 255, 255, .05)',
+
+            '&:hover': {
+                backgroundColor: theme.palette.type === 'light' ? 'rgba(255, 255, 255, .2)' : 'rgba(0, 0, 0, .2)',
+            },
+
             '& > div:first-child': {
                 flex: '0 0 20px'
             },

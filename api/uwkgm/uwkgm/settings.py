@@ -95,8 +95,8 @@ AUTHENTICATION_BACKENDS = (
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'UWKGM',
+        'ENGINE': os.environ['UWKGM_DB_DJANGO_ENGINE'],
+        'NAME': os.path.join(BASE_DIR, os.environ['UWKGM_DB_DJANGO_NAME']),
         'USER': os.environ['UWKGM_DB_DJANGO_USERNAME'] if 'UWKGM_DB_DJANGO_USERNAME' in os.environ else '',
         'PASSWORD': os.environ['UWKGM_DB_DJANGO_PASSWORD'] if 'UWKGM_DB_DJANGO_PASSWORD' in os.environ else '',
         'HOST': os.environ['UWKGM_DB_DJANGO_ADDRESS'] if 'UWKGM_DB_DJANGO_ADDRESS' in os.environ else 'localhost',

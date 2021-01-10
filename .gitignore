@@ -11,7 +11,7 @@ __pycache__/
 /api/env
 /api/uwkgm/dev
 /api/uwkgm/private
-/api/end2end_neural_el
+/api/uwkgm/db.sqlite3
 /conf
 /dev
 /notes

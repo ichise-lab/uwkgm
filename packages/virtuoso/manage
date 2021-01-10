@@ -2,6 +2,7 @@
 
 source bin/libs/args
 source bin/libs/inputs
+source packages/virtuoso/bin/import
 source packages/virtuoso/bin/install
 source packages/virtuoso/bin/run
 source packages/virtuoso/package
@@ -12,13 +13,11 @@ packages.virtuoso.manage() {
     while true;
     do
         CHOICES=(
-            "Run"
             "Install"
             "Import graph data"
         )
 
         VALUES=(
-            run
             install
             import
         )
@@ -26,11 +25,9 @@ packages.virtuoso.manage() {
         echo "[UWKGM: INFO] OpenLink Virtuoso Community Edition version $UWKGM_PKG_VIRTUOSO_VERSION"
 
         args.pull OPERATION
-        inputs.choices OPERATION "Virtuoso Operation" "Choose operation for Virtuoso" "run" "$OPERATION" "${CHOICES[@]}" "${VALUES[@]}"
+        inputs.choices OPERATION "Virtuoso Operation" "Choose operation for Virtuoso" "install" "$OPERATION" "${CHOICES[@]}" "${VALUES[@]}"
 
-        if [[ $OPERATION == "run" ]]; then
-            packages.virtuoso.run
-        elif [[ $OPERATION == "install" ]]; then
+        if [[ $OPERATION == "install" ]]; then
             packages.virtuoso.install
         elif [[ $OPERATION == "import" ]]; then
             packages.virtuoso.import
