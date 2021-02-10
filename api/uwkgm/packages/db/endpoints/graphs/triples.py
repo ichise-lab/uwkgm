@@ -18,7 +18,7 @@ from accounts.permissions import IsTrustedUser
 
 
 @endpoint(['GET'], requires=[IsAuthenticated])
-def find(triple: Tuple[str, str, str], graph_uri: str) -> bool:
+def find(graph_uri: str, triple: Tuple[str, str, str]) -> bool:
     """Find a triple in the graph database
 
     :param triple: Entities of (subject, predicate, object)
@@ -26,22 +26,24 @@ def find(triple: Tuple[str, str, str], graph_uri: str) -> bool:
     :return: True if the triple exists in the graph
     """
 
-    return interfaces.resolve(find)(triple, graph_uri)
+    return interfaces.resolve(find)(graph_uri, triple)
 
 
 @endpoint(['POST'], requires=[OR(IsAdminUser, IsTrustedUser)])
-def add(triple: Tuple[str, str, str], graph_uri: str) -> str:
+def add(graph_uri: str, triple: Tuple[str, str, str], literal: str = None, language: str = None) -> str:
     """Add a triple to the graph database
 
     :param triple: A URI triple (subject, predicate, object)
     :param graph_uri: Graph URI
+    :param literal: Literal (attribute) value
+    :param language: Language if the triple is an attribute
     :return: Adding status
     """
-    return interfaces.resolve(add)(triple, graph_uri)
+    return interfaces.resolve(add)(graph_uri, triple, literal=literal, language=language)
 
 
 @endpoint(['DELETE'], requires=[OR(IsAdminUser, IsTrustedUser)])
-def delete(triple: Tuple[str, str, str], graph_uri: str) -> str:
+def delete(graph_uri: str, triple: Tuple[str, str, str]) -> str:
     """Delete a triple from the graph database
 
     :param triple: Entities of (subject, predicate, object)
@@ -49,11 +51,11 @@ def delete(triple: Tuple[str, str, str], graph_uri: str) -> str:
     :return: Deleting status
     """
 
-    return interfaces.resolve(delete)(triple, graph_uri)
+    return interfaces.resolve(delete)(graph_uri, triple)
 
 
 @endpoint(['GET'], requires=[IsAuthenticated])
-def verify(triple: Tuple[str, str, str], graph_uri: str) -> Dict[str, Any]:
+def verify(graph_uri: str, triple: Tuple[str, str, str]) -> Dict[str, Any]:
     """Verify a new triple
 
     :param triple: (subject, predicate, object)
@@ -62,4 +64,4 @@ def verify(triple: Tuple[str, str, str], graph_uri: str) -> Dict[str, Any]:
     :return: True if the triple does not exist in the graph
     """
 
-    return interfaces.resolve(verify)(triple, graph_uri)
+    return interfaces.resolve(verify)(graph_uri, triple)

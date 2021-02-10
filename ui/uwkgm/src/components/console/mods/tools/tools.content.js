@@ -20,6 +20,9 @@ export const content = {
     clone: {
         en: 'Clone'
     },
+    entities: {
+        en: 'Entities'
+    },
     reload: {
         en: 'Reload'
     },

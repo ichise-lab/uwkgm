@@ -25,3 +25,14 @@ init:
       types:
         - name: rdf:type
           uri: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+    shortURIs:
+      dbo: http://dbpedia.org/ontology
+      dbp: http://dbpedia.org/property
+      dbr: http://dbpedia.org/resource
+      dbt: "http://dbpedia.org/resource/Template:"
+      geo: http://www.w3.org/2003/01/geo/wgs84_pos#
+      dul: http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#
+      yago: http://dbpedia.org/class/yago/
+      yago-res: http://yago-knowledge.org/resource/
+      wikidata: http://www.wikidata.org/entity/
+      freebase: http://rdf.freebase.com/

@@ -8,27 +8,26 @@ import { getStyles } from 'styles/styles';
 import { styles } from './canvas.css';
 import {
     areGraphsIdentical,
-    createD3Data,
-    createLinks,
     defineArrows,
     filterMinLinks,
-    filterDirectedLinks,
-    filterExtNeighbors,
+    filterHiddenNodes,
     filterNodesByRules,
     handleCanvasDrag,
     handleNodeMouseOver,
     handleNodeMouseLeave,
     handleNodeClick,
-    initNodes,
+    initCanvasGraphLinks,
+    initCanvasGraphNodes,
     setArrowColor,
     setLinkColor,
+    setLinkLabel,
     setLinkLabelTransform,
     setLinkLabelSize,
     setLinkLabelColor,
     setLinkPath,
-    setNodeHoverLabel,
-    setNodeHoverOpacity,
+    setNodeColor,
     setNodeLabel,
+    setNodeOpacity,
     setNodeOptionStyles,
     setNodeRuleStyles
 } from './canvas.libs';
@@ -37,59 +36,55 @@ export class CanvasClass extends React.Component {
     constructor(props) {
         super(props);
 
-        this.canvas = React.createRef();
         this.container = React.createRef();
+        this.canvas = React.createRef();
+        this.canvasGraph = null;
 
         this.hoveringNode = null;
     }
 
-    filter(filteredGraph) {
+    applyStyles(canvasGraph) {
         const graph = this.props.reducers.graphs.graph;
         const tools = this.props.reducers.graphs.tools;
         const options = this.props.reducers.graphs.options;
 
-        initNodes(filteredGraph);
-
-        filterExtNeighbors(filteredGraph, options);
-        filterDirectedLinks(filteredGraph, options);
-        filterMinLinks(filteredGraph, options);
-        filterNodesByRules(filteredGraph, graph, tools.rules.manual);
-
-        createLinks(filteredGraph);
-    }
-
-    style(filteredGraph) {
-        const graph = this.props.reducers.graphs.graph;
-        const tools = this.props.reducers.graphs.tools;
-        const options = this.props.reducers.graphs.options;
-
-        for (let node of Object.values(filteredGraph.nodes)) {
-            setNodeOptionStyles(node, options);
-            setNodeRuleStyles(node, graph, tools.rules.manual);
+        for (let [id, state] of Object.entries(canvasGraph.states)) {
+            setNodeOptionStyles(state, options);
+            setNodeRuleStyles(id, state, graph, tools.rules.manual);
         }
     }
 
     draw() {
-        var filteredGraph = Object.assign({}, this.props.reducers.graphs.graph);
-        this.filter(filteredGraph);
-        this.style(filteredGraph);
+        const graph = this.props.reducers.graphs.graph;
+        const tools = this.props.reducers.graphs.tools;
+        const options = this.props.reducers.graphs.options;
+        var canvasGraph = initCanvasGraphNodes(graph);
 
-        if ('filteredGraph' in this && areGraphsIdentical(this.filteredGraph, filteredGraph)) {
+        filterHiddenNodes(canvasGraph);
+        filterNodesByRules(canvasGraph, graph, tools.rules.manual);
+        initCanvasGraphLinks(canvasGraph, graph);
+
+        filterMinLinks(canvasGraph, options);
+        initCanvasGraphLinks(canvasGraph, graph);
+
+        this.applyStyles(canvasGraph);
+
+        if (this.canvasGraph !== null && areGraphsIdentical(this.canvasGraph, canvasGraph)) {
+            this.canvasGraph = canvasGraph;
             this.update();
         } else {
-            this.filteredGraph = filteredGraph;
+            this.canvasGraph = canvasGraph;
             this.renderGraph();
         }
     }
 
     renderGraph() {
         const graph = this.props.reducers.graphs.graph;
-        const data = createD3Data(this.filteredGraph);
         const canvasWidth = this.container.current.offsetWidth;
         const canvasHeight = this.container.current.offsetHeight;
 
-        var simulation = d3.forceSimulation(data.nodes)
-            .force('link', d3.forceLink(data.links).id(d => d.id))
+        var simulation = d3.forceSimulation(this.canvasGraph.nodes)
+            .force('link', d3.forceLink(this.canvasGraph.triples).id(d => d.id))
             .force('charge', d3.forceManyBody().strength(-200))
             .force('x', d3.forceX())
             .force('y', d3.forceY());
@@ -105,7 +100,7 @@ export class CanvasClass extends React.Component {
 
         this.links = svg.append('g')
             .selectAll('.line')
-            .data(data.links)
+            .data(this.canvasGraph.triples)
             .join('g');
 
         this.lines = this.links.append('line')
@@ -113,7 +108,7 @@ export class CanvasClass extends React.Component {
             .attr('marker-end', 'url(#default)');
 
         this.linkPaths = svg.selectAll(".edgepath")
-            .data(data.links)
+            .data(this.canvasGraph.triples)
             .enter()
             .append('path')
             .attr('class', 'edgepath')
@@ -123,7 +118,7 @@ export class CanvasClass extends React.Component {
             .style("pointer-events", "none");
         
         this.linkLabels = svg.selectAll(".edgelabel")
-            .data(data.links)
+            .data(this.canvasGraph.triples)
             .enter()
             .append('text')
             .style("pointer-events", "none")
@@ -135,11 +130,11 @@ export class CanvasClass extends React.Component {
             .style("text-anchor", "middle")
             .style("pointer-events", "none")
             .attr("startOffset", "50%")
-            .text(d => setNodeLabel(d, graph));
+            .text(d => setLinkLabel(d, graph));
 
         this.nodes = svg.append('g')
             .selectAll('.node')
-            .data(data.nodes)
+            .data(this.canvasGraph.nodes)
             .join('g')
             .call(handleCanvasDrag(simulation));
         
@@ -151,14 +146,14 @@ export class CanvasClass extends React.Component {
         this.nodeLabels = this.nodes.append('text');
         this.nodeBackgrounds = this.nodes.insert('rect', 'text');
 
-        this.circles.on('mouseover', d => handleNodeMouseOver(d, graph, this));
-        this.circles.on('mouseout', d => handleNodeMouseLeave(d, graph, this));
-        this.circles.on('click', d => handleNodeClick(d, graph, this));
-        this.icons.on('mouseover', d => handleNodeMouseOver(d, graph, this));
-        this.icons.on('mouseout', d => handleNodeMouseLeave(d, graph, this));
-        this.icons.on('click', d => handleNodeClick(d, graph, this));
+        this.circles.on('mouseover', d => handleNodeMouseOver(d, this));
+        this.circles.on('mouseout', d => handleNodeMouseLeave(d, this));
+        this.circles.on('click', d => handleNodeClick(d, this.props.onNodeSelect, this));
+        this.icons.on('mouseover', d => handleNodeMouseOver(d, this));
+        this.icons.on('mouseout', d => handleNodeMouseLeave(d, this));
+        this.icons.on('click', d => handleNodeClick(d, this.props.onNodeSelect, this));
         
-        simulation.nodes(data.nodes).on("tick", () => {
+        simulation.nodes(this.canvasGraph.nodes).on("tick", () => {
             this.update();
         });
         
@@ -173,7 +168,7 @@ export class CanvasClass extends React.Component {
         }
 
         const getStyle = node => {
-            return this.filteredGraph.nodes[this.filteredGraph.ids[node.id]].styles;
+            return this.canvasGraph.states[node.id].styles;
         }
 
         const graph = this.props.reducers.graphs.graph;
@@ -191,7 +186,7 @@ export class CanvasClass extends React.Component {
         this.icons
             .attr('d', d => getStyle(d).icon)
             .attr('fill', d => getStyle(d).node.backgroundColor)
-            .attr('opacity', d => setNodeHoverOpacity(d, this.hoveringNode, graph, this.filteredGraph))
+            .attr('opacity', d => setNodeOpacity(d, this.props.selectedNodes, self))
             .attr('transform', d => 'translate(' + (d.x - 12) + ', ' + (d.y - 12) + ')')
             
         this.nodeLabels
@@ -200,7 +195,7 @@ export class CanvasClass extends React.Component {
             .attr('fill', d => getStyle(d).label.fontColor)
             .attr('font-size', d => getStyle(d).label.fontSize)
             .attr('font-weight', d => getStyle(d).label.fontWeight)
-            .text(d => setNodeHoverLabel(d, this.filteredGraph, graph, options))
+            .text(d => setNodeLabel(d, this.props.selectedNodes, graph, options, self))
             .call(getBBox);
             
         this.lines
@@ -211,20 +206,23 @@ export class CanvasClass extends React.Component {
         
         this.nodes.selectAll('circle')
             .attr('r', d => getStyle(d).node.size)
-            .attr('fill', d => getStyle(d).node.backgroundColor)
-            .attr('opacity', d => getStyle(d).icon === null ? setNodeHoverOpacity(d, this.hoveringNode, graph, this.filteredGraph) : 0);
+            .attr('fill', d => setNodeColor(d, 
+                this.props.selectedNodes, 
+                getStyle(d).node.backgroundColor, 
+                this.props.reducers.theme.theme, self))
+            .attr('opacity', d => getStyle(d).icon === null ? setNodeOpacity(d, this.props.selectedNodes, self) : 0);
         
         this.links.selectAll('line')
-            .attr('stroke', d => setLinkColor(d, this.hoveringNode, this.filteredGraph))
-            .attr('marker-end', d => setArrowColor(d, this.hoveringNode, this.filteredGraph));
+            .attr('stroke', d => setLinkColor(d, this.props.reducers.theme, self))
+            .attr('marker-end', d => setArrowColor(d, this.props.selectedNodes, self));
 
         this.linkPaths
-            .attr('d', d => setLinkPath(d, this.hoveringNode, this.filteredGraph, options));
+            .attr('d', d => setLinkPath(d, graph, options, self));
 
         this.linkLabels
             .attr('font-size', setLinkLabelSize(options))
-            .attr('fill', d => setLinkLabelColor(d, this.hoveringNode, this.filteredGraph, options, this.props.reducers.theme.theme))
-            .attr('transform', function(d) { return setLinkLabelTransform(d, self.hoveringNode, self.filteredGraph, options, this)});
+            .attr('fill', d => setLinkLabelColor(d, graph, options, this.props.reducers.theme.theme, self))
+            .attr('transform', function(d) { return setLinkLabelTransform(d, graph, options, self, this)});
 
         this.nodeBackgrounds
             .attr('x', d => d.bbox.x)

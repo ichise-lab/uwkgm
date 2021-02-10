@@ -1,6 +1,6 @@
 import React from 'react';
-import { useTheme } from '@material-ui/core/styles';
 
+import AddCircleIcon from '@material-ui/icons/AddCircle';
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
 import CheckIcon from '@material-ui/icons/Check';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -12,13 +12,11 @@ import SelectAllIcon from '@material-ui/icons/SelectAll';
 import { content } from './tools.content';
 import { getStyles } from 'styles/styles';
 import { Language } from 'services/languages/languages';
-import { LargeButton, getIconColors } from 'components/console/templates/tools';
+import { LargeButton } from 'components/console/templates/tools';
 import { styles } from 'components/console/templates/tools.css';
 
 export const Tools = props => {
     const classes = getStyles(styles);
-    const theme = useTheme();
-    const iconColors = getIconColors(theme);
     const { 
         triples,
         selectedIds,
@@ -28,6 +26,7 @@ export const Tools = props => {
         onRemoveClick,
         onSelectAllClick,
         onCloneClick,
+        onEntityAddClick,
         onReloadClick,
         onCommitClick
     } = props;
@@ -91,6 +90,19 @@ export const Tools = props => {
                         text={<Language text={content.clone} />} 
                         onClick={onCloneClick}
                         disabled={isUserAbsoulteDemo || selectedIds.length != 1} 
+                    />
+                </div>
+                <div className={classes.tools.divider} />
+                <div className={classes.tools.header}>
+                    <div>
+                        <Language text={content.entities} />
+                    </div>
+                </div>
+                <div className={classes.tools.singleBlock}>
+                    <LargeButton 
+                        icon={<AddCircleIcon />} 
+                        text={<Language text={content.add} />} 
+                        onClick={onEntityAddClick}
                     />
                 </div>
                 <div className={classes.tools.divider} />

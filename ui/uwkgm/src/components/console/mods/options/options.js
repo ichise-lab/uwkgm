@@ -2,6 +2,7 @@ import React from 'react';
 
 import { content } from './options.content';
 import { Language } from 'services/languages/languages';
+import { OptionClass } from 'components/console/templates/options';
 import { 
     Section,
     SelectBlock,
@@ -10,40 +11,30 @@ import {
     SwitchBlock
 } from 'components/console/templates/options';
 
-export class Options extends React.Component {
+export class Options extends OptionClass {
     constructor(props) {
         super(props);
 
-        this.nSections = 2;
-
-        var opens = [];
-        for (var i = 0; i < this.nSections; i++) {
-            opens.push(true);
-        }
-
+        this.nSections = 1;
+        var opens = [true]
+        
         this.state = {opens: opens};
-    }
-
-    handleToggle = (index) => {
-        var opens = this.state.opens;
-        opens[index] = !opens[index];
-        this.setState(() => ({opens: opens}));
     }
 
     render() {
         return (
             <OptionsFunc 
                 isOpens={this.state.opens} 
-                onToggle={this.handleToggle}
+                onSectionToggle={this.handleSectionToggle}
             />
         );
     }
 }
 
-const OptionsFunc = (props) => {
+const OptionsFunc = props => {
     const { 
         isOpens,
-        onToggle
+        onSectionToggle
     } = props;
 
     return (
@@ -52,7 +43,7 @@ const OptionsFunc = (props) => {
                 title={<Language text={content.display} />}
                 isOpen={isOpens[0]}
                 isFoldable={true}
-                onToggle={(event) => {onToggle(0)}}
+                onToggle={(event) => {onSectionToggle(0)}}
             >
                 <SelectBlock
                     label={<Language text={content.sortBy} />}

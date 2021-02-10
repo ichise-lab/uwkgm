@@ -1,10 +1,7 @@
 #!/bin/bash
 
 source bin/conf
-source bin/libs/secure
 source bin/packages
-source conf/base
-source conf/databases
 
 manage.run() {
     while true;
@@ -33,9 +30,11 @@ manage.run() {
 }
 
 manage.run.api() {
-    secure.password.master
-    manage.conf.secure.load "conf/$UWKGM_ENV.secrets.enc"
-    # manage.packages.site.run
+    source conf/databases
+    source conf/secrets
+    source conf/servers
+
+    manage.packages.site.run
 
     echo "[UWKGM: INFO] Preparing the API server..."
 
@@ -53,6 +52,8 @@ manage.run.api() {
 }
 
 manage.run.ui() {
+    source conf/servers
+    
     export HOST=0.0.0.0
     export PORT=8000
     export REACT_APP_ENV=$UWKGM_ENV

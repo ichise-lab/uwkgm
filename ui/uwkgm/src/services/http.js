@@ -9,10 +9,20 @@ export const request = props => {
     delete props.json;
     delete props.passError;
 
+    var params = {};
+
+    for (let [key, value] of Object.entries(props.params || {})) {
+        if (typeof value === 'string' || value instanceof String) {
+            params[key] = value;
+        } else {
+            params[key] = JSON.stringify(value);
+        }
+    }
+
     var settings = props || {};
     settings.headers = settings.headers || {};
     settings.headers['Authorization'] = 'Bearer ' + auth.getTokens().access;
-    url.search = new URLSearchParams(props.params || {}).toString();
+    url.search = new URLSearchParams(params).toString();
 
     var promise = new Promise((resolve, reject) => {
         fetch(url, settings)
@@ -68,13 +78,11 @@ request.json = props => {
     if ('method' in props && props.method.toUpperCase() !== 'GET') {
         var params = {};
 
-        if ('body' in props) {
-            for (let [key, value] of Object.entries(props.body)) {
-                if (typeof value === 'string' || value instanceof String) {
-                    params[key] = value;
-                } else {
-                    params[key] = JSON.stringify(value);
-                }
+        for (let [key, value] of Object.entries(props.body || {})) {
+            if (typeof value === 'string' || value instanceof String) {
+                params[key] = value;
+            } else {
+                params[key] = JSON.stringify(value);
             }
         }
 

@@ -6,6 +6,7 @@ import CheckIcon from '@material-ui/icons/Check';
 import CodeIcon from '@material-ui/icons/Code';
 import ColorLensIcon from '@material-ui/icons/ColorLens';
 import EditIcon from '@material-ui/icons/Edit';
+import GpsFixedIcon from '@material-ui/icons/GpsFixed';
 import IconButton from '@material-ui/core/IconButton';
 import LensIcon from '@material-ui/icons/Lens';
 import LinkIcon from '@material-ui/icons/Link';
@@ -44,22 +45,16 @@ import LabelBorderIcon from 'assets/icons/LabelBorder';
 import NodeBorderIcon from 'assets/icons/NodeBorder';
 import NodeColorIcon from 'assets/icons/NodeColor';
 
-export class Tools extends React.Component {
-    render() {
-        return (
-            <ToolsFunc
-                closeRulePage={this.props.closeRulePage}
-                toggleRulePage={this.props.toggleRulePage}
-            />
-        );
-    }
-}
-
-export const ToolsFunc = props => {
+export const Tools = props => {
     const classes = getStyles(styles);
     const theme = useTheme();
     const iconColors = getIconColors(theme);
-    const { closeRulePage, toggleRulePage } = props;
+    const { 
+        selectedNodes, 
+        onRulePageClose, 
+        onRulePageToggle,
+        onNodeExpand
+    } = props;
 
     const [menuEl, setMenuEl] = React.useState(null);
     const [menuKey, setMenuKey] = React.useState(null);
@@ -69,7 +64,7 @@ export const ToolsFunc = props => {
             {text: 'Basic', icon: <MemoryIcon />, onClick: () => {}}
         ],
         module: [
-            {text: 'Graph', icon: <ShareIcon />, onClick: () => {closeRulePage()}}
+            {text: 'Graph', icon: <ShareIcon />, onClick: () => {onRulePageClose()}}
         ]
     };
 
@@ -174,7 +169,10 @@ export const ToolsFunc = props => {
                     <LargeButton icon={<VerticalSplitIcon />} text={<Language text={content.detail} />} disabled />
                 </div>
                 <div className={classes.tools.singleBlock}>
-                    <LargeButton icon={<ColorLensIcon />} text={<Language text={content.rules} />} onClick={toggleRulePage} />
+                    <LargeButton icon={<ColorLensIcon />} text={<Language text={content.rules} />} onClick={onRulePageToggle} />
+                </div>
+                <div className={classes.tools.singleBlock}>
+                    <LargeButton icon={<GpsFixedIcon />} text={<Language text={content.expand} />} onClick={onNodeExpand} disabled={!Boolean(selectedNodes.length)} />
                 </div>
                 <div className={classes.tools.divider} />
                 <div className={classes.tools.header}>

@@ -1,26 +1,6 @@
 import * as d3 from 'd3';
 
-const countExistingIds = (ids, filteredGraph) => {
-    var counter = 0;
-
-    for (let id of Object.keys(ids)) {
-        if (filteredGraph.ids[id] in filteredGraph.nodes) {
-            counter++;
-        }
-    }
-
-    return counter;
-}
-
-const anyExistingIds = (ids, filteredGraph) => {
-    for (let id of Object.keys(ids)) {
-        if (filteredGraph.ids[id] in filteredGraph.nodes) {
-            return true;
-        }
-    }
-
-    return false;
-}
+import { genLabelFromURI } from 'libs/rdf';
 
 const convertRGBA = color => {
     return 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', ' + color.a + ')';
@@ -34,7 +14,7 @@ const verifyManualRule = (node, nodes, rule) => {
             if (type in nodes) {
                 const typeId = nodes[type].id;
 
-                if (node.types.includes(typeId)) {
+                if ('types' in node && node.types.includes(typeId)) {
                     return true;
                 }
             }
@@ -68,51 +48,26 @@ export const handleCanvasDrag = simulation => {
         .on('end', dragended);
 }
 
-export const handleNodeMouseOver = (node, graph, caller) => {
-    graph.nodes[graph.ids[node.id]].isHovering = true;
+export const handleNodeMouseOver = (node, caller) => {
+    caller.canvasGraph.states[node.id].isHovering = true;
     caller.hoveringNode = node;
     caller.update();
 }
 
-export const handleNodeMouseLeave = (node, graph, caller) => {
-    graph.nodes[graph.ids[node.id]].isHovering = false;
+export const handleNodeMouseLeave = (node, caller) => {
+    caller.canvasGraph.states[node.id].isHovering = false;
     caller.hoveringNode = null;
     caller.update();
 }
 
-export const handleNodeClick = (node, graph, caller) => {
-    for (let key of Object.keys(graph.nodes)) {
-        graph.nodes[key].selected = false;
+export const handleNodeClick = (node, onNodeSelect, caller) => {
+    for (let state of Object.values(caller.canvasGraph.states)) {
+        state.isSelected = false;
     }
 
-    graph.nodes[graph.ids[node.id]].selected = true;
-    caller.selected = node;
+    caller.canvasGraph.states[node.id].isSelected = true;
+    onNodeSelect(node.id);
     caller.update();
-}
-
-export const makeLabelfromURI = entity => {
-    const urlSections = entity.split('/');
-    const identifierSections = urlSections[urlSections.length - 1].split('#');
-    const label = identifierSections[identifierSections.length - 1]
-        .replace(/([A-Z])/g, ' $1')
-        .trim();
-    
-    return label.length ? label : entity;
-}
-
-export const createD3Data = filteredGraph => {
-    var data = {nodes: [], links: []};
-
-    for (let node of Object.values(filteredGraph.nodes)) {
-        data.nodes.push({id: node.id});
-    }
-
-    for (let [link, pred] of Object.entries(filteredGraph.links)) {
-        const ids = link.split('-');
-        data.links.push({source: parseInt(ids[0]), predicate: parseInt(pred), target: parseInt(ids[1])});
-    }
-
-    return data;
 }
 
 export const defineArrows = (svg, name, refX, fill) => {
@@ -131,94 +86,102 @@ export const defineArrows = (svg, name, refX, fill) => {
         .attr('d', 'M0,-5L10,0L0,5');
 }
 
-export const initNodes = filteredGraph => {
-    var filteredNodes = {};
+export const initCanvasGraphNodes = graph => {
+    var canvasGraph = {nodes: [], triples: [], states: {}};
 
-    for (let [entity, node] of Object.entries(filteredGraph.nodes)) {
-        node.isHovering = false;
-        node.selected = false;
-        filteredNodes[entity] = node;
+    for (let [uri, obj] of Object.entries(graph.lookup)) {
+        canvasGraph.nodes.push({
+            id: obj.id
+        });
+        canvasGraph.states[obj.id] = {
+            isHovering: false,
+            isSelected: false,
+            incomings: [],
+            outgoings: [],
+            styles: {node: {}, label: {}}
+        };
     }
 
-    filteredGraph.nodes = filteredNodes;
+    for (let i = 0; i < graph.triples.length; i++) {
+        canvasGraph.states[graph.triples[i].target].incomings.push(graph.triples[i].source);
+        canvasGraph.states[graph.triples[i].source].outgoings.push(graph.triples[i].target);
+    }
+
+    return canvasGraph;
 }
 
-export const createLinks = filteredGraph => {
-    var filteredLinks = {};
+export const initCanvasGraphLinks = (canvasGraph, graph) => {
+    var filteredNodes = [];
+    var canvasTriples = [];
 
-    for (let node of Object.values(filteredGraph.nodes)) {
-        for (let [objId, predId] of Object.entries(node.outgoings)) {
-            if (filteredGraph.ids[node.id] in filteredGraph.nodes && filteredGraph.ids[objId] in filteredGraph.nodes) {
-                filteredLinks[node.id + '-' + objId] = predId;
-            }
+    for (let i = 0; i < canvasGraph.nodes.length; i++) {
+        filteredNodes.push(canvasGraph.nodes[i].id);
+    }
+
+    for (let i = 0; i < graph.triples.length; i++) {
+        if (filteredNodes.includes(graph.triples[i].source) &&
+            filteredNodes.includes(graph.triples[i].target)) {
+            canvasTriples.push({
+                source: graph.triples[i].source,
+                predicate: graph.triples[i].predicate,
+                target: graph.triples[i].target
+            });
         }
     }
 
-    filteredGraph.links = filteredLinks;
+    canvasGraph.triples = canvasTriples;
 }
 
-export const filterMinLinks = (filteredGraph, options) => {
-    var filteredNodes = {};
-
+export const filterMinLinks = (canvasGraph, options) => {
     if (options.graph.minLinks > 1) {
-        for (let [entity, obj] of Object.entries(filteredGraph.nodes)) {
-            if (countExistingIds(obj.incomings, filteredGraph) + countExistingIds(obj.outgoings, filteredGraph) >= options.graph.minLinks) {
-                filteredNodes[entity] = obj;
-            }
-        }
+        var canvasNodes = [];
+        var neighborDict = {};
 
-        filteredGraph.nodes = filteredNodes;
-    }
-}
+        for (let i = 0; i < canvasGraph.triples.length; i++) {
+            const sorceId = canvasGraph.triples[i].source;
+            const targetId = canvasGraph.triples[i].target;
 
-export const filterDirectedLinks = (filteredGraph, options) => {
-    var filteredNodes = {};
-
-    if (options.graph.showIncomingLinks && !options.graph.showOutgoingLinks) {
-        for (let [entity, obj] of Object.entries(filteredGraph.nodes)) {
-            if (obj.isMainNode || anyExistingIds(obj.outgoings, filteredGraph)) {
-                filteredNodes[entity] = obj;
-            }
-        }
-
-        filteredGraph.nodes = filteredNodes;
-
-    } else if (!options.graph.showIncomingLinks && options.graph.showOutgoingLinks) {
-        for (let [entity, obj] of Object.entries(filteredGraph.nodes)) {
-            if (obj.isMainNode || anyExistingIds(obj.incomings, filteredGraph)) {
-                filteredNodes[entity] = obj;
-            }
-        }
-
-        filteredGraph.nodes = filteredNodes;
-    }
-}
-
-export const filterExtNeighbors = (filteredGraph, options) => {
-    var filteredNodes = {};
-
-    if (!options.graph.showExtNeighbors) {
-        for (let [entity, obj] of Object.entries(filteredGraph.nodes)) {
-            if (obj.isMainNode) {
-                filteredNodes[entity] = obj;
+            if (!(sorceId in neighborDict)) {
+                neighborDict[sorceId] = 1;
             } else {
-                for (let objId of Object.keys(obj.incomings)) {
-                    if (filteredGraph.ids[objId] in filteredGraph.nodes && 
-                        filteredGraph.nodes[filteredGraph.ids[objId]].isMainNode) {
-                        filteredNodes[entity] = obj;
-                    }
-                }
+                neighborDict[sorceId]++;
+            }
+
+            if (!(targetId in neighborDict)) {
+                neighborDict[targetId] = 1;
+            } else {
+                neighborDict[targetId]++;
             }
         }
 
-        filteredGraph.nodes = filteredNodes;
+        for (let i = 0; i < canvasGraph.nodes.length; i++) {
+            if (neighborDict[canvasGraph.nodes[i].id] >= options.graph.minLinks) {
+                canvasNodes.push(canvasGraph.nodes[i]);
+            }
+        }
+
+        canvasGraph.nodes = canvasNodes;
     }
 }
 
-export const filterNodesByRules = (filteredGraph, graph, rules) => {
-    var visibility = {};
+export const filterHiddenNodes = canvasGraph => {
+    var canvasNodes = [];
+    var canvasStates = {};
+
+    for (let i = 0; i < canvasGraph.nodes.length; i++) {
+        if (canvasGraph.states[canvasGraph.nodes[i].id].incomings.length > 0 ||
+            canvasGraph.states[canvasGraph.nodes[i].id].outgoings.length > 0) {
+            canvasNodes.push(canvasGraph.nodes[i]);
+            canvasStates[canvasGraph.nodes[i].id] = canvasGraph.states[canvasGraph.nodes[i].id]
+        }
+    }
+
+    canvasGraph.nodes = canvasNodes;
+    canvasGraph.states = canvasStates;
+}
+
+export const filterNodesByRules = (canvasGraph, graph, rules) => {
     var notApplicableVisible = true;
-    var filteredNodes = {};
 
     for (let rule of rules) {
         if (rule.rule[1] === 'notApplicable') {
@@ -226,23 +189,23 @@ export const filterNodesByRules = (filteredGraph, graph, rules) => {
         }
     }
 
-    for (let [entity, node] of Object.entries(filteredGraph.nodes)) {
-        visibility[entity] = notApplicableVisible;
+    if (!notApplicableVisible) {
+        var canvasNodes = [];
 
-        for (let i = rules.length - 1; i >= 0; i--) {
-            if (rules[i].rule[1] !== 'notApplicable' && verifyManualRule(node, graph.nodes, rules[i])) {
-                visibility[entity] = rules[i].visible;
+        for (let i = 0; i < canvasGraph.nodes.length; i++) {
+            var node = graph.lookup[graph.ids[canvasGraph.nodes[i].id]];
+
+            for (let n = 0; n < rules.length; n++) {
+                if (('isMainNode' in node && node.isMainNode) ||
+                    (rules[n].rule[1] !== 'notApplicable' && 
+                     verifyManualRule(node, graph.lookup, rules[n]))) {
+                    canvasNodes.push(canvasGraph.nodes[i])
+                }
             }
         }
+        
+        canvasGraph.nodes = canvasNodes;
     }
-
-    for (let [entity, obj] of Object.entries(filteredGraph.nodes)) {
-        if (obj.isMainNode || visibility[entity]) {
-            filteredNodes[entity] = obj;
-        }
-    }
-
-    filteredGraph.nodes = filteredNodes;
 }
 
 export const areGraphsIdentical = (graphA, graphB) => {
@@ -262,30 +225,45 @@ export const areGraphsIdentical = (graphA, graphB) => {
     return true;
 }
 
-export const setNodeOptionStyles = (node, options) => {
-    const nodeType = node.isMainNode ? 'main' : 'minor';
-    node.styles = {node: {}, label: {}}
+export const setNodeOptionStyles = (state, options) => {
+    const nodeType = state.isMainNode ? 'main' : 'minor';
 
     for (let element of ['node', 'label']) {
         for (let [key, value] of Object.entries(options.styles.nodes[nodeType][element])) {
             if (typeof value === 'object' && 'r' in value && 'g' in value && 'b' in value && 'a' in value) {
-                node.styles[element][key] = convertRGBA(value);
+                state.styles[element][key] = convertRGBA(value);
             } else {
-                node.styles[element][key] = value;
+                state.styles[element][key] = value;
             }
         }
     }
 
-    node.styles.icon = null;
+    state.styles.icon = null;
 }
 
-export const setNodeHoverOpacity = (node, hoveringNode, graph, filteredGraph) => {
-    const targetNode = filteredGraph.nodes[graph.ids[node.id]];
+export const setNodeColor = (node, selectedNodes, defaultColor, theme, caller) => {
+    if (selectedNodes.length > 0 && selectedNodes.includes(node.id)) {
+        return theme === 'light' ? '#000' : '#FFF';
+    } else {
+        return defaultColor;
+    }
+}
 
-    if (targetNode.isMainNode) {
+export const setNodeOpacity = (node, selectedNodes, caller) => {
+    const state = caller.canvasGraph.states[node.id];
+
+    if (selectedNodes.length > 0) {
+        if (selectedNodes.includes(node.id) || (caller.hoveringNode !== null && caller.hoveringNode.id === node.id)) {
+            return 1;
+        } else {
+            return .3;
+        }
+    }
+
+    if (state.isMainNode) {
         return 1;
     } else {
-        if (hoveringNode !== null && !(targetNode.isHovering || hoveringNode.id in targetNode.incomings || hoveringNode.id in targetNode.outgoings)) {
+        if (caller.hoveringNode !== null && !(state.isHovering || caller.hoveringNode.id in state.incomings || caller.hoveringNode.id in state.outgoings)) {
             return .3;
         } else {
             return 1;
@@ -293,32 +271,46 @@ export const setNodeHoverOpacity = (node, hoveringNode, graph, filteredGraph) =>
     }
 }
 
-export const setNodeLabel = (node, graph) => {
-    for (let uri of graph.rdf.labels.uris) {
-        if (uri in graph.nodes && graph.nodes[uri].id in graph.nodes[graph.ids[node.predicate]].attributes) {
-            return graph.nodes[graph.ids[node.predicate]].attributes[graph.ids[uri]];
+export const setNodeLabel = (node, selectedNodes, graph, options, caller) => {
+    function genLabel() {
+        if ('label' in graph.lookup[graph.ids[node.id]]) {
+            return graph.lookup[graph.ids[node.id]].label;
+        } else {
+            return genLabelFromURI(graph.ids[node.id]);
         }
     }
 
-    return makeLabelfromURI(graph.ids[node.predicate]);
-}
+    const state = caller.canvasGraph.nodes[node.id];
 
-export const setNodeHoverLabel = (node, graph, filteredGraph, options) => {
-    const targetNode = filteredGraph.nodes[graph.ids[node.id]];
+    if (selectedNodes.length > 0) {
+        if (selectedNodes.includes(node.id) || (caller.hoveringNode !== null && caller.hoveringNode.id == node.id)) {
+            return genLabel();
+        } else {
+            return '';
+        }
+    }
 
     if (options.graph.showAllNodeLabels ||
-        (options.graph.showMainNodeLabels && targetNode.isMainNode) ||
-        (options.graph.showHoverNodeLabels && targetNode.isHovering)) {
-        return targetNode.label.text;
+        (options.graph.showMainNodeLabels && graph.lookup[graph.ids[node.id]].isMainNode) ||
+        (options.graph.showHoverNodeLabels && caller.canvasGraph.states[node.id].isHovering)) {
+        return genLabel();
     } else {
         return '';
     }
 }
 
-export const setLinkColor = (link, hoveringNode, filteredGraph, theme) => {
-    if (hoveringNode !== null) {
-        if (filteredGraph.nodes[filteredGraph.ids[link.source.id]].isHovering || 
-            filteredGraph.nodes[filteredGraph.ids[link.target.id]].isHovering) {
+export const setLinkLabel = (link, graph) => {
+    if ('label' in graph.lookup[graph.ids[link.predicate]]) {
+        return graph.lookup[graph.ids[link.predicate]].label;
+    } else {
+        return genLabelFromURI(graph.ids[link.predicate]);
+    }
+}
+
+export const setLinkColor = (link, theme, caller) => {
+    if (caller.hoveringNode !== null) {
+        if (caller.canvasGraph.states[link.source.id].isHovering || 
+            caller.canvasGraph.states[link.target.id].isHovering) {
             return theme === 'light' ? '#888' : '#CCC';
         } else {
             return theme === 'light' ? 'rgba(0, 0, 0, .08)' : 'rgba(255, 255, 255, .08)';
@@ -328,34 +320,38 @@ export const setLinkColor = (link, hoveringNode, filteredGraph, theme) => {
     return theme === 'light' ? 'rgba(0, 0, 0, .08)' : 'rgba(255, 255, 255, .08)';
 }
 
-export const setArrowColor = (link, hoveringNode, filteredGraph) => {
-    if (hoveringNode != null) {
-        if (filteredGraph.nodes[filteredGraph.ids[link.source.id]].isHovering || 
-            filteredGraph.nodes[filteredGraph.ids[link.target.id]].isHovering) {
+export const setArrowColor = (link, selectedNodes, caller) => {
+    if (caller.hoveringNode != null) {
+        if (caller.canvasGraph.states[link.source.id].isHovering || 
+            caller.canvasGraph.states[link.target.id].isHovering) {
             return 'url(#hovering)';
         } else {
             return 'url(#notHovering)';
         }
     }
 
-    return 'url(#default)';
+    if (selectedNodes.length > 0) {
+        return 'url(#notHovering)';
+    } else {
+        return 'url(#default)';
+    }
 }
 
-const shouldShowLinkLabel = (link, hoveringNode, filteredGraph, options) => {
+const shouldShowLinkLabel = (link, graph, options, caller) => {
     if (options.graph.showAllLinkLabels) {
         return true;
-    } else if (options.graph.showHoverLinkLabels && hoveringNode !== null) {
-        if (hoveringNode.id === link.source.id && filteredGraph.nodes[filteredGraph.ids[link.source.id]].isMainNode) {
-            if (filteredGraph.nodes[filteredGraph.ids[link.target.id]].isMainNode) {
+    } else if (options.graph.showHoverLinkLabels && caller.hoveringNode !== null) {
+        if (caller.hoveringNode.id === link.source.id && graph.lookup[graph.ids[link.source.id]].isMainNode) {
+            if (graph.lookup[graph.ids[link.target.id]].isMainNode) {
                 return true;
             }
-        } else if (hoveringNode.id === link.target.id && filteredGraph.nodes[filteredGraph.ids[link.target.id]].isMainNode) {
-            if (filteredGraph.nodes[filteredGraph.ids[link.source.id]].isMainNode) {
+        } else if (caller.hoveringNode.id === link.target.id && graph.lookup[graph.ids[link.target.id]].isMainNode) {
+            if (graph.lookup[graph.ids[link.source.id]].isMainNode) {
                 return true;
             }
-        } else if (hoveringNode.id === link.source.id && filteredGraph.nodes[filteredGraph.ids[link.target.id]].isMainNode) {
+        } else if (caller.hoveringNode.id === link.source.id && graph.lookup[graph.ids[link.target.id]].isMainNode) {
             return true;
-        } else if (hoveringNode.id === link.target.id && filteredGraph.nodes[filteredGraph.ids[link.source.id]].isMainNode) {
+        } else if (caller.hoveringNode.id === link.target.id && graph.lookup[graph.ids[link.source.id]].isMainNode) {
             return true;
         }
     }
@@ -363,15 +359,15 @@ const shouldShowLinkLabel = (link, hoveringNode, filteredGraph, options) => {
     return false;
 }
 
-export const setLinkPath = (link, hoveringNode, filteredGraph, options) => {
+export const setLinkPath = (link, graph, options, caller) => {
     const showLabel = () => 'M ' + link.source.x + ' ' + link.source.y + ' L ' + link.target.x + ' ' + link.target.y;
-    return shouldShowLinkLabel(link, hoveringNode, filteredGraph, options) ? showLabel() : '';
+    return shouldShowLinkLabel(link, graph, options, caller) ? showLabel() : '';
 }
 
-export const setLinkLabelTransform = (link, hoveringNode, filteredGraph, options, caller) => {
+export const setLinkLabelTransform = (link, graph, options, caller, holder) => {
     function showLabel() {
         if (link.target.x < link.source.x) {
-            const bbox = caller.getBBox();
+            const bbox = holder.getBBox();
             const rx = bbox.x + bbox.width / 2;
             const ry = bbox.y + bbox.height / 2;
             return 'rotate(180 ' + rx + ' ' + ry + ')';
@@ -380,19 +376,19 @@ export const setLinkLabelTransform = (link, hoveringNode, filteredGraph, options
         }
     }
 
-    return shouldShowLinkLabel(link, hoveringNode, filteredGraph, options) ? showLabel() : '';
+    return shouldShowLinkLabel(link, graph, options, caller) ? showLabel() : '';
 }
 
-export const setLinkLabelColor = (link, hoveringNode, filteredGraph, options, theme) => {
+export const setLinkLabelColor = (link, graph, options, theme, caller) => {
     const color = theme === 'dark' ? '#CCC' : '#888';
-    return shouldShowLinkLabel(link, hoveringNode, filteredGraph, options) ? color : 'rgba(0, 0, 0, 0)';
+    return shouldShowLinkLabel(link, graph, options, caller) ? color : 'rgba(0, 0, 0, 0)';
 }
 
 export const setLinkLabelSize = options => {
     return options.styles.links.label.fontSize;
 }
 
-export const setNodeRuleStyles = (node, graph, rules) => {
+export const setNodeRuleStyles = (id, state, graph, rules) => {
     const applyStyles = (nodeStyles, ruleStyles) => {
         for (let element of ['node', 'label']) {
             for (let [key, value] of Object.entries(ruleStyles[element])) {
@@ -410,8 +406,8 @@ export const setNodeRuleStyles = (node, graph, rules) => {
     }
 
     for (let i = rules.length - 1; i >= 0; i--) {
-        if (verifyManualRule(node, graph.nodes, rules[i])) {
-            applyStyles(node.styles, rules[i].styles);
+        if (verifyManualRule(graph.lookup[graph.ids[id]], graph.lookup, rules[i])) {
+            applyStyles(state.styles, rules[i].styles);
         }
     }
 }

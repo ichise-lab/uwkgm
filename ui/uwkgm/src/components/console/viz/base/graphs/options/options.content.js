@@ -31,9 +31,6 @@ export const content = {
         outGoings: {
             en: 'Outgoings'
         },
-        showExtNeighbors: {
-            en: 'Extended Neighbors'
-        },
         nodeLabels: {
             en: 'Node Labels'
         },

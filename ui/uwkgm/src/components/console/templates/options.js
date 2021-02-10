@@ -28,7 +28,7 @@ import { styles } from './options.css';
 import { updateOptions } from 'components/console/console.action';
 
 
-export class OptionsClass extends React.Component {
+export class OptionContainerClass extends React.Component {
     handleOptionsClose = () => {
         var options = this.props.reducers.console.options;
         options.isOpen = false;
@@ -43,7 +43,7 @@ export class OptionsClass extends React.Component {
 
     render() {
         return (
-            <OptionsFunc 
+            <OptionContainerFunc 
                 title={this.props.title}
                 isOptionsOpen={this.props.reducers.console.options.isOpen}
                 onOptionsClose={this.handleOptionsClose}
@@ -54,7 +54,7 @@ export class OptionsClass extends React.Component {
     }
 }
 
-export const OptionsFunc = props => {
+export const OptionContainerFunc = props => {
     const classes = getStyles(styles.options);
     const theme = useTheme();
     const { 
@@ -89,6 +89,18 @@ export const OptionsFunc = props => {
             : ''}
         </Drawer>
     );
+}
+
+export class OptionClass extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    handleSectionToggle = index => {
+        var opens = this.state.opens;
+        opens[index] = !opens[index];
+        this.setState(() => ({opens: opens}));
+    }
 }
 
 export const FlexContent = props => {
@@ -412,4 +424,4 @@ const mapDispatchToProps = dispatch => {
     };
 }
 
-export const Options = connect(mapStateToProps, mapDispatchToProps)(OptionsClass);
+export const OptionContainer = connect(mapStateToProps, mapDispatchToProps)(OptionContainerClass);

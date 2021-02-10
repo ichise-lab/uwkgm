@@ -45,6 +45,9 @@ export const content = {
     detail: {
         en: 'Detail'
     },
+    expand: {
+        en: 'Expand'
+    },
     links: {
         en: 'Links'
     },

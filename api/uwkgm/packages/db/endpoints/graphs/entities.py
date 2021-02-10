@@ -32,28 +32,25 @@ PREDICATES = {
 
 
 @endpoint(['GET'], requires=[IsAuthenticated])
-def find(entities: List[str], graph: str, language: str = 'en', query_limit: Union[int, None] = None,
-         predicates: Dict[str, Dict[str, Union[Dict[str, str], str]]] = PREDICATES, include_incomings: bool = True,
-         include_outgoings: bool = True) -> Dict[str, List[Dict[str, str]]]:
+def find(uris: List[str], graph: str, language: str = 'en', query_limit: Union[int, None] = None,
+         include_incomings: bool = False, include_outgoings: bool = True) -> Dict[str, List[Dict[str, str]]]:
     """Find triples of which the given entity is a subject or an object
 
-    :param entities: A list of entities to be used to find the triples
+    :param uris: A list of entity URIs to be used to find the triples
     :param graph: Graph URI
     :param language: A language filter for the candidates' labels
     :param query_limit: The maximum number of candidates specified in the database query command
-    :param predicates: Predicates to be included in a query (See the default variable PREDICATES for its structure)
     :param include_incomings: Include entities' incoming links (triples)
     :param include_outgoings: Include entities' outgoing links (triples)
     :return: Lists of triples pertaining to the entity's role ({'subject': [...], 'predicate': [...], 'object': [...]})
     """
     
-    return interfaces.resolve(find)(graph, entities, language, query_limit, predicates,
-                                    include_incomings, include_outgoings)
+    return interfaces.resolve(find)(graph, uris, language, query_limit, include_incomings, include_outgoings)
 
 
 @endpoint(['GET'], requires=[IsAuthenticated])
 def candidates(search: str, graph: str, limit: Union[int, None] = 50, query_limit: Union[int, None] = None,
-               label_entities: List[str] = LABEL_ENTITIES, type_entities: str = TYPE_ENTITIES, have_types_only: bool = True,
+               label_entities: List[str] = LABEL_ENTITIES, type_entities: str = TYPE_ENTITIES, have_types_only: bool = False,
                perfect_match_only: bool = False)\
         -> Dict[str, List[Dict[str, Union[str, List[str]]]]]:
     """Find candidates of entities given a partial or full label

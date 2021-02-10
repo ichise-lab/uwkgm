@@ -67,6 +67,7 @@ export class ConsoleClass extends React.Component {
         };
 
         this.Catalogs = React.lazy(() => import('./catalogs/catalogs'));
+        this.Entity = React.lazy(() => import('./entity/entity'));
         this.Explorer = React.lazy(() => import('./explorer/explorer'));
         this.Mods = React.lazy(() => import('./mods/mods'));
         this.Visualizer = React.lazy(() => import('./viz/viz'));
@@ -108,7 +109,7 @@ export class ConsoleClass extends React.Component {
     componentDidMount() {
         this.isComponentMounted = true;
         this.setAppBarColor('white');
-        fetchCatalogs(this.props.actions.catalogs);
+        fetchCatalogs(this.props.reducers.catalogs, this.props.actions.catalogs);
     }
 
     componentWillUnmount() {
@@ -126,6 +127,7 @@ export class ConsoleClass extends React.Component {
                 isOptionOpen={this.props.reducers.console.options.isOpen}
                 onOptionOpen={this.handleOptionOpen}
                 Catalogs={this.Catalogs}
+                Entity={this.Entity}
                 Explorer={this.Explorer}
                 Mods={this.Mods}
                 Visualizer={this.Visualizer}
@@ -149,6 +151,7 @@ const ConsoleFunc = props => {
         isOptionOpen,
         onOptionOpen,
         Catalogs,
+        Entity,
         Explorer,
         Mods,
         Visualizer
@@ -276,6 +279,11 @@ const ConsoleFunc = props => {
                         <Route path={`${url}/api/explorer`}>
                             <Suspense fallback={<LoadingScreen text="Loading API explorer..." noCopyright />}>
                                 <Explorer />
+                            </Suspense>
+                        </Route>
+                        <Route path={`${url}/entity`}>
+                            <Suspense fallback={<LoadingScreen text="Loading entity editor..." noCopyright />}>
+                                <Entity />
                             </Suspense>
                         </Route>
                         <Route path={`${url}/mods`}>

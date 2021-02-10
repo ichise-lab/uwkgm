@@ -12,171 +12,110 @@ from typing import Any, Dict, List, Union
 from uwkgm import db
 
 
-def find(graph: str, entities: List[str], language: str, query_limit: Union[int, None],
-         predicates: Dict[str, Dict[str, Union[Dict[str, str], str]]], include_incomings: bool,
-         include_outgoings: bool) -> dict:
-    def convert_entities(items: List[str]) -> str:
-        return '|'.join(['<%s>' % item for item in items])
+def find(graph: str, uris: List[str], language: str, query_limit: Union[int, None],
+         include_incomings: bool, include_outgoings: bool) -> dict:
+    """Find triples of which the given entity is a subject or an object"""
 
-    def gen_lang_filter(element: str) -> str:
-        return "(!isLiteral(?%s) || langMatches(lang(?%s), '') || langMatches(lang(?%s), '%s'))" % (
-        element, element, element, language)
+    def fetch(direction: str) -> List[dict]:
+        query_main = f'?{target} ?predicate <{uri}>' if direction == 'incoming' else f'<{uri}> ?predicate ?{target}'
+        query_lang = f"""
+                       FILTER (!isLiteral(?predicate_label) || langMatches(lang(?predicate_label), '') || langMatches(lang(?predicate_label), '{language}'))
+                       FILTER (!isLiteral(?{target}) || langMatches(lang(?{target}), '') || langMatches(lang(?{target}), '{language}'))
+                       FILTER (!isLiteral(?{target}_label) || langMatches(lang(?{target}_label), '') || langMatches(lang(?{target}_label), '{language}'))
+                      """
+        limit_filter = f'LIMIT {int(query_limit)}' if query_limit is not None else ''
 
-    def fetch(entity: str, direction: str) -> List[dict]:
-        target_element = 'subject' if direction == 'incomings' else 'object'
-
-        query = 'SELECT DISTINCT ?predicate ?%s ' % (target_element)
-
-        if predicates[direction]['predicates'] == 'all':
-            query += '?predicate_all_predicate ?predicate_all_object '
-        else:
-            for key in predicates[direction]['predicates']:
-                query += '?predicate_%s ' % key
-
-        if predicates[direction]['targets'] == 'all':
-            query += '?%s_all_predicate ?%s_all_object ' % (target_element, target_element)
-        else:
-            for key in predicates[direction]['targets']:
-                query += '?%s_%s ' % (target_element, key)
-
-        query += 'FROM <%s> WHERE { ' % graph
-        query += '?subject ?predicate <%s> ' % entity if direction == 'incomings' else '<%s> ?predicate ?object ' % entity
-
-        if predicates[direction]['predicates'] == 'all':
-            query += 'OPTIONAL { ?predicate ?predicate_all_predicate ?predicate_all_object } '
-        else:
-            for key, value in predicates[direction]['predicates'].items():
-                query += 'OPTIONAL { ?predicate %s ?predicate_%s } ' % (convert_entities(value), key)
-
-        if predicates[direction]['targets'] == 'all':
-            query += 'OPTIONAL { ?%s ?%s_all_predicate ?%s_all_object }' % (
-            target_element, target_element, target_element)
-        else:
-            for key, value in predicates[direction]['targets'].items():
-                query += 'OPTIONAL { ?%s %s ?%s_%s } ' % (target_element, convert_entities(value), target_element, key)
-
-        if language is not None and len(language):
-            filters = [gen_lang_filter(target_element)]
-
-            if predicates[direction]['predicates'] == 'all':
-                filters.append(gen_lang_filter('predicate_all_object'))
-            else:
-                for key in predicates[direction]['predicates']:
-                    filters.append(gen_lang_filter('predicate_%s' % key))
-
-            if predicates[direction]['targets'] == 'all':
-                filters.append(gen_lang_filter('%s_all_object' % target_element))
-            else:
-                for key in predicates[direction]['targets']:
-                    filters.append(gen_lang_filter('%s_%s' % (target_element, key)))
-
-            query += 'FILTER ( %s ) ' % ' && '.join(filters)
-
-        query += '} %s ' % limit_filter
+        query = f"""
+                 SELECT DISTINCT ?predicate ?predicate_type ?predicate_label ?{target} ?{target}_type ?{target}_label FROM <{graph}> WHERE {{
+                     {query_main}
+                     OPTIONAL {{ ?predicate <{'>|<'.join(catalog_labels)}> ?predicate_label }}
+                     OPTIONAL {{ ?predicate <{'>|<'.join(catalog_types)}> ?predicate_type }}
+                     OPTIONAL {{ ?{target} <{'>|<'.join(catalog_labels)}> ?{target}_label }}
+                     OPTIONAL {{ ?{target} <{'>|<'.join(catalog_types)}> ?{target}_type }}
+                     {query_lang if language is not None else ''}
+                 }}
+                 {limit_filter}
+                """
 
         db.graphs.client.setQuery(query)
         return db.graphs.client.query().convert()['results']['bindings']
 
-    def get_or_create_id(entity: str) -> int:
-        if entity not in nodes:
-            entity_id = len(nodes)
-            nodes[entity] = {'id': entity_id}
-        else:
-            entity_id = nodes[entity]['id']
-
-        return entity_id
-
-    def assign_link(subject: str, predicate: str, obj: str) -> None:
-        get_or_create_id(subject)
-        predicate_id = get_or_create_id(predicate)
-        object_id = get_or_create_id(obj)
-
-        if 'outgoings' not in nodes[subject]:
-            nodes[subject]['outgoings'] = dict()
-
-        if predicate_id not in nodes[subject]['outgoings']:
-            nodes[subject]['outgoings'][predicate_id] = list()
-
-        if object_id not in nodes[subject]['outgoings'][predicate_id]:
-            nodes[subject]['outgoings'][predicate_id].append(object_id)
-
-    def assign_attr(subject: str, predicate: str, value: Any) -> None:
-        get_or_create_id(subject)
-        predicate_id = get_or_create_id(predicate)
-
-        if 'attributes' not in nodes[subject]:
-            nodes[subject]['attributes'] = dict()
-
-        nodes[subject]['attributes'][predicate_id] = value
-
-    def assign(source: str, predicate: str, target: str, target_type: str) -> None:
-        if target_type == 'uri':
-            assign_link(source, predicate, target)
-        else:
-            assign_attr(source, predicate, target)
-
-    def process(entity: str, items: List[dict], direction: str) -> None:
-        target_element = 'subject' if direction == 'incomings' else 'object'
-
+    def maps() -> None:
         for item in items:
-            if direction == 'incomings':
-                assign(item[target_element]['value'],
-                       item['predicate']['value'],
-                       entity,
-                       'uri')
-            else:
-                assign(entity,
-                       item['predicate']['value'],
-                       item[target_element]['value'],
-                       item[target_element]['type'])
+            for el in ['predicate', 'predicate_type', target, f'{target}_type']:
+                if el in item and item[el]['type'] == 'uri':
+                    if item[el]['value'] not in lookup:
+                        lookup[item[el]['value']] = {'id': len(lookup)}
 
-            if predicates[direction]['predicates'] == 'all':
-                if 'predicate_all_predicate' in item:
-                    assign(item['predicate']['value'],
-                           item['predicate_all_predicate']['value'],
-                           item['predicate_all_object']['value'],
-                           item['predicate_all_object']['type'])
-            else:
-                for key, value in predicates[direction]['predicates'].items():
-                    if 'predicate_%s' % key in item:
-                        assign(item['predicate']['value'],
-                               key,
-                               item['predicate_%s' % key]['value'],
-                               item['predicate_%s' % key]['type'])
+    def assign() -> None:
+        for item in items:
+            if item[target]['type'] == 'uri':
+                if element == 'subject':
+                    triples.append((lookup[uri]['id'], lookup[item['predicate']['value']]['id'], lookup[item['object']['value']]['id']))
+                    if item['predicate']['value'] in catalog_types:
+                        if 'types' not in lookup[uri]:
+                            lookup[uri]['types'] = [lookup[item['object']['value']]['id']]
+                        else:
+                            lookup[uri]['types'].append(lookup[item['object']['value']]['id'])
+                else:
+                    triples.append((lookup[item['subject']['value']]['id'], lookup[item['predicate']['value']]['id'], lookup[uri]['id']))
 
-            if predicates[direction]['targets'] == 'all':
-                if '%s_all_predicate' % target_element in item:
-                    assign(item[target_element]['value'],
-                           item['%s_all_predicate' % target_element]['value'],
-                           item['%s_all_object' % target_element]['value'],
-                           item['%s_all_object' % target_element]['type'])
             else:
-                for key, value in predicates[direction]['targets'].items():
-                    if '%s_%s' % (target_element, key) in item:
-                        assign(item[target_element]['value'],
-                               key,
-                               item['%s_%s' % (target_element, key)]['value'],
-                               item['%s_%s' % (target_element, key)]['type'])
+                if 'xml:lang' in item[target]:
+                    literal = {'value': item[target]['value'], 'language': item[target]['xml:lang']}
+                else:
+                    literal = {'value': item[target]['value']}
+
+                if 'literals' not in lookup[uri]:
+                    lookup[uri]['literals'] = {lookup[item['predicate']['value']]['id']: literal}
+                else:
+                    lookup[uri]['literals'][lookup[item['predicate']['value']]['id']] = literal
+
+                if item['predicate']['value'] in catalog_labels:
+                    lookup[uri]['label'] = item[target]['value']
+
+            if 'predicate_label' in item:
+                lookup[item['predicate']['value']]['label'] = item['predicate_label']['value']
+            if f'{target}_label' in item:
+                lookup[item[target]['value']]['label'] = item[f'{target}_label']['value']
+
+            if 'predicate_type' in item:
+                if 'types' not in lookup[item['predicate']['value']]:
+                    lookup[item['predicate']['value']]['types'] = [lookup[item['predicate_type']['value']]['id']]
+                elif lookup[item['predicate_type']['value']]['id'] not in lookup[item['predicate']['value']]['types']:
+                    lookup[item['predicate']['value']]['types'].append(lookup[item['predicate_type']['value']]['id'])
+            if f'{target}_type' in item:
+                if 'types' not in lookup[item[target]['value']]:
+                    lookup[item[target]['value']]['types'] = [lookup[item[f'{target}_type']['value']]['id']]
+                elif lookup[item[f'{target}_type']['value']]['id'] not in lookup[item[target]['value']]['types']:
+                    lookup[item[target]['value']]['types'].append(lookup[item[f'{target}_type']['value']]['id'])
 
     time_start = time.process_time()
-    limit_filter = "LIMIT %d" % query_limit if query_limit is not None else ''
-    nodes = dict()
+    catalog = db.docs.catalog(graph)
+    catalog_labels = [lb['uri'] for lb in catalog['predicates']['labels']]
+    catalog_types = [ty['uri'] for ty in catalog['predicates']['types']]
+    lookup = dict()
+    triples = list()
 
-    for i, entity in enumerate(entities):
-        nodes[entity] = {'id': i, 'isMainNode': True}
+    for i, uri in enumerate(uris):
+        lookup[uri] = {'id': i}
 
-    for entity in entities:
+    for uri in uris:
         if include_incomings:
-            items = fetch(entity, 'incomings')
-            process(entity, items, 'incomings')
+            element, target = 'object', 'subject'
+            items = fetch('incoming')
+            maps()
+            assign()
 
         if include_outgoings:
-            items = fetch(entity, 'outgoings')
-            process(entity, items, 'outgoings')
+            element, target = 'subject', 'object'
+            items = fetch('outgoing')
+            maps()
+            assign()
 
     time_end = time.process_time()
 
-    return {'nodes': nodes, 'duration': time_end - time_start}
+    return {'lookup': lookup, 'triples': triples, 'duration': time_end - time_start}
 
 
 def candidates(graph: str, search: str, limit: Union[int, None], query_limit: [int, None], label_entities: List[str],
@@ -258,7 +197,7 @@ def candidates(graph: str, search: str, limit: Union[int, None], query_limit: [i
         filtered = []
 
         for entry in entries:
-            types = [tag.lower() for tag in entry[1]['types']]
+            types = [tag.lower() for tag in entry[1]['types'] if isinstance(tag, str)]
 
             if len(pos_type_tags):
                 if all(any(pos.lower() in tag for tag in types) for pos in pos_type_tags):

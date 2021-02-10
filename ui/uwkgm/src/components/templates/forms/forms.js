@@ -25,6 +25,7 @@ export const Selector = props => {
 
     return (
         <button 
+            type="button"
             className={clsx([classes.block, classes.select], {[classes[color]]: typeof color !== 'undefined'})} 
             onClick={handleButtonClick}
         >
@@ -56,7 +57,7 @@ export const SelectorMenu = props => {
                         key={index}
                         selected={value === key}
                         disabled={choices[key].disabled}
-                        onClick={() => onSelect(key)}
+                        onClick={event => onSelect(key)}
                         dense
                     >{'title' in choices[key] ? choices[key].title : choices[key]}</MenuItem>
                 ))

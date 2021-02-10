@@ -1,8 +1,5 @@
-import styled from 'styled-components';
 import TextField from '@material-ui/core/TextField';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-
-import { brightGrey, blue, darkGrey } from 'styles/colors.css';
 
 export const CustomTextField = withStyles(theme => ({
     root: {
@@ -141,7 +138,7 @@ export const styles = {
         },
 
         selected: {
-            backgroundColor: blue
+            backgroundColor: theme.palette.info.main
         },
     
         selectedTitle: {
@@ -153,7 +150,7 @@ export const styles = {
         },
     
         selectedType: {
-            color: darkGrey,
+            color: theme.palette.text.primary,
             backgroundColor: 'white'
         }
     })),
@@ -195,7 +192,7 @@ export const useStyles = makeStyles(theme => ({
     },
 
     selected: {
-        backgroundColor: blue
+        backgroundColor: theme.palette.info.main
     },
 
     selectedTitle: {
@@ -207,91 +204,7 @@ export const useStyles = makeStyles(theme => ({
     },
 
     selectedType: {
-        color: darkGrey,
+        color: theme.palette.text.primary,
         backgroundColor: 'white'
     }
 }));
-
-export const FlexContainer = styled.div`
-    display: flex;
-    position: absolute;
-    top: 104px;
-    left: 0px;
-    height: 100px;
-    width: 100%;
-    
-    & > div:first-child {
-        text-align: left;
-    }
-    
-    & > div:nth-child(2) {
-        text-align: center;
-    }
-    
-    & > div:last-child {
-        text-align: right;
-    }`;
-
-export const FlexContent = styled.div`
-    flex: 1;`;
-
-export const InputBlock = styled.div`
-    display: inline-block;
-    width: 30%;
-    min-width: 300px;
-    max-width: 400px;
-    padding-top: 40px;`;
-
-export const SuggestionBlock = styled.div`
-    display: inline-block;
-    overflow-y: scroll;
-    width: 100%;
-    max-height: 500px;
-    background-color: white;
-    border: 1px solid #F1F2F8;
-    box-shadow: 0px 0px 15px #e6e9f8;
-    
-    & > div {
-        border-bottom: 1px solid #EEE;
-    }
-    
-    & > div:last-child {
-        border-bottom: none;
-    }`;
-
-export const Suggestion = styled.div`
-    text-align: left;
-    padding: 10px;
-    padding-left: 20px;
-    padding-right: 20px;
-    cursor: pointer;`;
-
-export const SuggestionTitle = styled.div`
-    color: ${darkGrey};
-    font-size: .9em;
-    font-weight: bold;
-    overflow: hidden;
-    text-overflow: ellipsis;`;
-
-export const SuggestionEntity = styled.div`
-    color: ${brightGrey};
-    font-size: .85em;
-    overflow: hidden;
-    text-overflow: ellipsis;`;
-
-export const SuggestionTypeBlock = styled.div`
-    height: 2.3em;
-    overflow: hidden;`;
-
-export const SuggestionType = styled.div`
-    display: inline-block;
-    color: white;
-    background-color: black;
-    font-size: .85em;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    padding-left: 10px;
-    padding-right: 10px;
-    margin-right: 5px;
-    margin-top: 10px;
-    border-radius: 30px;`;

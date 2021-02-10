@@ -105,32 +105,35 @@ def commit(graph: str, graph_uri: str) -> int:
         if 'committed' not in triple:
             if triple.get('action') == 'add':
                 t = triple.get('triple')
-                graphs.triples.add((t['subject']['entity']['uri'],
+                graphs.triples.add(graph_uri,
+                                   (t['subject']['entity']['uri'],
                                     t['predicate']['entity']['uri'],
                                     t['object']['entity']['uri']),
-                                   graph_uri)
+                                   literal=t['object']['literal'] if 'literal' in t['object'] else None,
+                                   language=t['object']['language'] if 'language' in t['object'] else None)
                 n_changes += 1
 
             elif triple.get('action') == 'delete':
                 t = triple.get('triple')
-                graphs.triples.delete((t['subject']['entity']['uri'],
+                graphs.triples.delete(graph_uri,
+                                      (t['subject']['entity']['uri'],
                                        t['predicate']['entity']['uri'],
-                                       t['object']['entity']['uri']),
-                                      graph_uri)
+                                       t['object']['entity']['uri']))
                 n_changes += 1
 
             elif triple.get('action') == 'edit':
                 origin = triple.get('originalTriple')
                 target = triple.get('triple')
-                graphs.triples.delete((origin['subject']['entity']['uri'],
+                graphs.triples.delete(graph_uri,
+                                      (origin['subject']['entity']['uri'],
                                        origin['predicate']['entity']['uri'],
-                                       origin['object']['entity']['uri']),
-                                      graph_uri)
-                graphs.triples.add((target['subject']['entity']['uri'],
+                                       origin['object']['entity']['uri']))
+                graphs.triples.add(graph_uri,
+                                   (target['subject']['entity']['uri'],
                                     target['predicate']['entity']['uri'],
-                                    target['object']['entity']['uri']),
-                                   graph_uri)
-                n_changes += 1
+                                    target['object']['entity']['uri']))
+
+            n_changes += 1
 
             db.docs.triples(graph).update({'_id': triple.get('_id')}, {'$set': {'committed': True}})
 

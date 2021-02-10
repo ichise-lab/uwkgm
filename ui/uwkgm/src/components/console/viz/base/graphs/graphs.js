@@ -8,12 +8,13 @@ import { apiEndpoint } from 'services/servers';
 import { Canvas } from './canvas/canvas';
 import { content as options } from './options/options.content';
 import { EntitySearch } from './search/search';
+import { getActiveCatalog } from 'services/catalogs/catalogs';
 import { getStyles } from 'styles/styles';
 import { init, updateGraph } from './graphs.action';
 import { Language } from 'services/languages/languages';
 import { Layout } from './layout/layout';
 import { Options as GraphOptions } from './options/options';
-import { Options } from 'components/console/templates/options';
+import { OptionContainer } from 'components/console/templates/options';
 import { Placeholder } from './placeholder/placeholder';
 import { request } from 'services/http';
 import { Rules } from './rules/rules';
@@ -27,7 +28,8 @@ export class GraphsClass extends React.Component {
     state = {
         widgets: [],
         isShowingRulePage: false,
-        isFetchingNodes: false
+        isFetchingNodes: false,
+        selectedNodes: []
     }
 
     constructor(props) {
@@ -35,96 +37,79 @@ export class GraphsClass extends React.Component {
         this.isComponentMounted = false;
     }
 
-    fetchNodes = entities => {
+    fetchNodes = uris => {
         this.setState(() => ({isFetchingNodes: true}), () => {
             request.json({ 
-                url: apiEndpoint + '/cui/graphs/entities/find',
+                url: apiEndpoint + '/databases/graphs/entities/find',
                 params: {
-                    entities: JSON.stringify(entities), 
+                    uris: JSON.stringify(uris), 
                     query_limit: this.props.reducers.graphs.options.graph.fetchLimit,
-                    graph: this.props.reducers.catalogs.active
+                    graph: getActiveCatalog(this.props.reducers.catalogs).uri
                 }
             }).then(data => {
                 if (this.isComponentMounted) {
                     var graph = this.props.reducers.graphs.graph;
-    
-                    const nGraphNodes = Object.keys(graph.nodes).length;
-                    var entity_i = 0;
                     var ids = {};
-    
-                    // Register entities in the response to local index system
-                    for (let [entity, obj] of Object.entries(data.nodes)) {
-                        if (!(entity in graph.nodes)) {
-                            graph.nodes[entity] = {id: nGraphNodes + entity_i, incomings: {}, outgoings: {}, attributes: {}, label: null, types: []};
-                            graph.ids[nGraphNodes + entity_i] = entity;
-                            entity_i++;
+
+                    // Convert result lookup IDs into local lookup IDs
+                    for (let [uri, obj] of Object.entries(data.lookup)) {
+                        ids[obj.id] = uri;
+
+                        if (!(uri in graph.lookup)) {
+                            graph.lookup[uri] = {
+                                id: Object.keys(graph.lookup).length
+                            };
+                            graph.ids[graph.lookup[uri].id] = uri;
                         }
-    
-                        graph.nodes[entity].isMainNode = graph.nodes[entity].isMainNode || entities.includes(entity);
-                        ids[obj.id] = entity;
-                    }
-    
-                    // Find IDs for predefined labels and types
-                    graph.rdf.labels.ids = 'label' in graph.nodes ? [graph.nodes['label'].id] : [];
-                    graph.rdf.types.ids = 'type' in graph.nodes ? [graph.nodes['type'].id] : [];
-    
-                    for (let label of graph.rdf.labels.uris) {
-                        if (label in graph.nodes) {
-                            graph.rdf.labels.ids.push(graph.nodes[label].id);
+
+                        if (uris.includes(uri)) {
+                            graph.lookup[uri].isMainNode = true;
                         }
                     }
-    
-                    for (let type of graph.rdf.types.uris) {
-                        if (type in graph.nodes) {
-                            graph.rdf.types.ids.push(graph.nodes[type].id);
-                        }
-                    }
-    
-                    // Register incoming and outgoing links
-                    for (let [entity, obj] of Object.entries(data.nodes)) {     
-                        if ('outgoings' in obj) {
-                            for (let [predId, objIds] of Object.entries(obj.outgoings)) {
-                                objIds.map(objId => {
-                                    const graphSbjId = graph.nodes[entity].id;
-                                    const graphPredId = graph.nodes[ids[predId]].id;
-                                    const graphObjId = graph.nodes[ids[objId]].id;
-    
-                                    if (!(graphObjId in graph.nodes[entity].outgoings)) {
-                                        graph.nodes[entity].outgoings[graphObjId] = graphPredId;
-    
-                                        if (graph.rdf.types.ids.includes(graphPredId)) {
-                                            graph.nodes[entity].types.push(graphObjId);
-                                        }
-                                    }
-    
-                                    if (!(graph.nodes[entity].id in graph.nodes[ids[objId]].incomings)) {
-                                        graph.nodes[ids[objId]].incomings[graph.nodes[entity].id] = graphPredId;
-                                    }
-    
-                                    graph.links[graphSbjId + '-' + graphObjId] = graphPredId;
-    
-                                    return null;
-                                });
-                            }
-                        }
-    
-                        if ('attributes' in obj) {
-                            for (let [attr, value] of Object.entries(obj.attributes)) {
-                                const attrId = graph.nodes[ids[attr]].id;
-                                graph.nodes[entity].attributes[attrId] = value;
-    
-                                // Register node label
-                                if (graph.rdf.labels.ids.includes(attrId)) {
-                                    graph.nodes[entity].label = {text: value, predicate: graph.nodes[ids[attr]]};
+
+                    // Convert result triple IDs into local triple IDs
+                    for (let i = 0; i < data.triples.length; i++) {
+                        const triple = {
+                            source: graph.lookup[ids[data.triples[i][0]]].id,
+                            predicate: graph.lookup[ids[data.triples[i][1]]].id,
+                            target: graph.lookup[ids[data.triples[i][2]]].id,
+                        };
+                        var exist = false;
+
+                        for (let n = 0; n < graph.triples.length; n++) {
+                            if (triple.source == graph.triples[n].source &&
+                                triple.predicate == graph.triples[n].predicate &&
+                                triple.target == graph.triples[n].target) {
+                                    exist = true;
                                 }
-                            }
                         }
-    
-                        if (graph.nodes[entity].label === null) {
-                            graph.nodes[entity].label = {text: makeLabelfromURI(entity), predicate: null};
+
+                        if (!exist) {
+                            graph.triples.push(triple);
                         }
                     }
-    
+
+                    // Convert result lookup dictionary into local lookup dictionary
+                    for (let [node_uri, node_obj] of Object.entries(data.lookup)) {
+                        if ('label' in node_obj) {
+                            graph.lookup[node_uri].label = node_obj.label;
+                        }
+
+                        if ('types' in node_obj) {
+                            graph.lookup[node_uri].types = [];
+                            for (let i = 0; i < node_obj.types.length; i++) {
+                                graph.lookup[node_uri].types.push(graph.lookup[ids[node_obj.types[i]]].id);
+                            }
+                        }
+
+                        if ('literals' in node_obj) {
+                            graph.lookup[node_uri].literals = {};
+                            for (let [pred_id, pred_obj] of Object.entries(node_obj.literals)) {
+                                graph.lookup[node_uri].literals[graph.lookup[ids[pred_id]].id] = pred_obj;
+                            }
+                        }
+                    }
+
                     this.props.actions.graphs.updateGraph(graph);
                     this.setState(() => ({isFetchingNodes: false}));
                 }
@@ -135,25 +120,51 @@ export class GraphsClass extends React.Component {
         });
     }
 
-    openWidgets = items => {
+    handleWidgetOpen = items => {
         this.setState(() => ({widgets: items}));
     }
 
-    closeWidgets = () => {
+    handleWidgetClose = () => {
         this.setState(() => ({widgets: []})); 
     }
 
-    toggleRulePage = () => {
+    handleRulePageToggle = () => {
         this.setState(() => ({isShowingRulePage: !this.state.isShowingRulePage}))
     }
 
     // Temporary function
-    closeRulePage = () => {
+    handleRulePageClose = () => {
         this.setState(() => ({isShowingRulePage: false}));
     }
 
-    handleAddNode = node => {
+    handleNodeAdd = node => {
         this.fetchNodes([node.entity]);
+    }
+
+    handleNodeSelect = id => {
+        var selectedNodes = this.state.selectedNodes;
+
+        if (selectedNodes.includes(id)) {
+            selectedNodes.splice(selectedNodes.indexOf(id), 1);
+        } else {
+            selectedNodes.push(id);
+        }
+
+        this.setState(() => ({selectedNodes: selectedNodes}));
+    }
+
+    handleNodeExpand = () => {
+        const graph = this.props.reducers.graphs.graph;
+        const selectedNodes = this.state.selectedNodes;
+        var uris = [];
+
+        for (let i = 0; i < selectedNodes.length; i++) {
+            uris.push(graph.ids[selectedNodes[i]]);
+        }
+
+        this.setState(() => ({selectedNodes: []}), () => {
+            this.fetchNodes(uris);
+        });
     }
 
     componentDidMount() {
@@ -167,16 +178,18 @@ export class GraphsClass extends React.Component {
     render() {
         return(
             <GraphsFunc
-                nodes={this.props.reducers.graphs.graph.nodes}
-                rules={this.props.reducers.graphs.tools.rules}
+                lookup={this.props.reducers.graphs.graph.lookup}
                 widgets={this.state.widgets}
-                openWidgets={this.openWidgets}
-                closeWidgets={this.closeWidgets}
-                closeRulePage={this.closeRulePage}
-                toggleRulePage={this.toggleRulePage}
+                selectedNodes={this.state.selectedNodes}
                 isShowingRulePage={this.state.isShowingRulePage}
                 isFetchingNodes={this.state.isFetchingNodes}
-                onAddNode={this.handleAddNode}
+                onWidgetOpen={this.handleWidgetOpen}
+                onWidgetClose={this.handleWidgetClose}
+                onRulePageClose={this.handleRulePageClose}
+                onRulePageToggle={this.handleRulePageToggle}
+                onNodeAdd={this.handleNodeAdd}
+                onNodeSelect={this.handleNodeSelect}
+                onNodeExpand={this.handleNodeExpand}
             />
         );
     }
@@ -188,31 +201,33 @@ const GraphsFunc = (props) => {
     const pageClasses = getStyles(pageStyles.page);
     const optionClasses = getStyles(optionStyles.options);
     const {
-        nodes,
-        // rules,
+        lookup,
         widgets,
-        openWidgets,
-        closeWidgets,
-        closeRulePage,
-        toggleRulePage,
+        selectedNodes,
         isShowingRulePage,
         isFetchingNodes,
-        onAddNode
+        onWidgetOpen,
+        onWidgetClose,
+        onRulePageClose,
+        onRulePageToggle,
+        onNodeAdd,
+        onNodeSelect,
+        onNodeExpand
     } = props;
 
     const [zoomScale, setZoomScale] = React.useState(1);
 
-    const handleZoomIn = event => {
+    const handleZoomIn = () => {
         setZoomScale(zoomScale + .2);
     }
 
-    const handleZoomOut = event => {
+    const handleZoomOut = () => {
         if (zoomScale > 1) {
             setZoomScale(zoomScale - .2);
         }
     }
 
-    const handleReset = event => {
+    const handleReset = () => {
         setZoomScale(1);
     }
 
@@ -220,10 +235,12 @@ const GraphsFunc = (props) => {
         <React.Fragment>
             <div className={clsx([pageClasses.fixedContainer, classes.container, optionClasses.content], {[optionClasses.contentShift]: isOptionsOpen})}>
                 <div className={clsx([pageClasses.fixedContent, classes.fixedContent])}>
-                    {Object.keys(nodes).length > 0 ? 
+                    {Object.keys(lookup).length > 0 ? 
                         <Canvas
                             zoomScale={zoomScale}
-                        /> 
+                            selectedNodes={selectedNodes}
+                            onNodeSelect={onNodeSelect}
+                        />
                     : 
                         <Placeholder />
                     }
@@ -235,31 +252,33 @@ const GraphsFunc = (props) => {
                     {!isShowingRulePage ? 
                         <EntitySearch 
                             isFetchingNodes={isFetchingNodes}
-                            onAddNode={onAddNode} 
+                            onNodeAdd={onNodeAdd} 
                         />
                     : ''}
-                    {isShowingRulePage ? <Rules toggleRulePage={toggleRulePage} /> : ''}
+                    {isShowingRulePage ? <Rules onRulePageToggle={onRulePageToggle} /> : ''}
                     {widgets.length ?
                         <Widgets
                             widgets={widgets}
-                            closeWidgets={closeWidgets}
+                            onWidgetClose={onWidgetClose}
                         />
                     : ''}
                     <Tools 
-                        closeRulePage={closeRulePage}
-                        toggleRulePage={toggleRulePage}
+                        selectedNodes={selectedNodes}
+                        onRulePageClose={onRulePageClose}
+                        onRulePageToggle={onRulePageToggle}
+                        onNodeExpand={onNodeExpand}
                     />
                 </div>
             </div>
-            <Options
+            <OptionContainer
                 title={<Language text={options.title} />}
                 isOptionsOpen={isOptionsOpen}
             >
                 <GraphOptions 
-                    nodes={nodes}
-                    openWidgets={openWidgets}
+                    nodes={[]}
+                    onWidgetOpen={onWidgetOpen}
                 />
-            </Options>
+            </OptionContainer>
         </React.Fragment>
     );
 }

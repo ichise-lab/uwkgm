@@ -19,7 +19,8 @@ manage.install() {
             ui
         )
 
-        inputs.choices OPERATION "Install Module" "Choose module to install" "all" "" "${CHOICES[@]}" "${VALUES[@]}"
+        args.pull OPERATION
+        inputs.choices OPERATION "Install Module" "Choose module to install" "all" "$OPERATION" "${CHOICES[@]}" "${VALUES[@]}"
 
         if [[ $OPERATION == "all" ]]; then
             manage.install.api

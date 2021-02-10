@@ -1,8 +1,9 @@
 import React from 'react';
 
-import { darkGrey, blue } from 'styles/colors.css';
+import { useTheme } from '@material-ui/core/styles';
 
 const FontColorIcon = props => {
+    const theme = useTheme();
     const { size, stroke, strokeWidth, fill, disabled } = props;
     const inactive = disabled ? '#888' : null;
 
@@ -11,11 +12,11 @@ const FontColorIcon = props => {
             <path 
                 d="M 6 15 L 11 2 L 16 15 M 7 11 L 15 11" 
                 style={{
-                    stroke: inactive || stroke || darkGrey, 
+                    stroke: inactive || stroke || theme.palette.text.primary, 
                     strokeWidth: strokeWidth || 2, 
                     fill: 'none'}} 
                 />
-            <rect x="3" y="18" width="16" height="5" style={{fill: inactive || fill || blue}} />
+            <rect x="3" y="18" width="16" height="5" style={{fill: inactive || fill || theme.palette.info.main}} />
         </svg>
     );
 }

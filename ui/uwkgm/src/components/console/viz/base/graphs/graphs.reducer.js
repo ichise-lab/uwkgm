@@ -2,21 +2,8 @@ import { initTheme } from 'services/themes/themes';
 
 const initialState = {
     graph: {
-        rdf: {
-            labels: {
-                uris: [
-                    'http://xmlns.com/foaf/0.1/name',
-                    'http://www.w3.org/2000/01/rdf-schema#label',
-                    'http://dbpedia.org/property/name',
-                    'http://dbpedia.org/ontology/title'
-                ],
-            },
-            types: {
-                uris: ['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']
-            }
-        },
-        nodes: {},
-        links: {},
+        lookup: {},
+        triples: [],
         ids: {}
     },
     search: {
@@ -32,7 +19,7 @@ const initialState = {
         graph: {
             sortBy: 'none',
             fetchLimit: 10000,
-            minLinks: 2,
+            minLinks: 1,
             maxLinks: 10,
             showAllNodeLabels: false,
             showMainNodeLabels: true,
@@ -43,7 +30,6 @@ const initialState = {
             showHoverLinkLabels: true,
             showIncomingLinks: false,
             showOutgoingLinks: true,
-            showExtNeighbors: true
         },
         styles: {
             nodes: {
@@ -104,7 +90,6 @@ const initialState = {
                 {r: 249, g: 179, b: 132, a: 1},
                 {r: 255, g: 226, b: 188, a: 1},
                 {r: 241, g: 227, b: 203, a: 1},
-                
             ]
         }
     }

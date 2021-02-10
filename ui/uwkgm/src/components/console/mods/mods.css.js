@@ -67,7 +67,7 @@ export const styles = {
             display: 'flex',
             alignItems: 'center',
             textAlign: 'center',
-            marginTop: 32,
+            marginTop: 17,
             marginBottom: 20,
 
             '& > div': {

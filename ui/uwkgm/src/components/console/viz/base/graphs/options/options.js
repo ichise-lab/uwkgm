@@ -36,8 +36,9 @@ import LabelBackgroundIcon from 'assets/icons/LabelBackground';
 import LabelBorderIcon from 'assets/icons/LabelBorder';
 import NodeColorIcon from 'assets/icons/NodeColor';
 import NodeBorderIcon from 'assets/icons/NodeBorder';
+import { OptionClass } from 'components/console/templates/options';
 
-export class OptionsClass extends React.Component {
+export class OptionsClass extends OptionClass {
     constructor(props) {
         super(props);
 
@@ -45,12 +46,6 @@ export class OptionsClass extends React.Component {
         var opens = [false, true, false];
 
         this.state = {opens: opens};
-    }
-
-    handleSectionToggle = (index) => {
-        var opens = this.state.opens;
-        opens[index] = !opens[index];
-        this.setState((state, props) => ({opens: opens}));
     }
 
     handleColorSetAdd = async color => {
@@ -87,7 +82,7 @@ export class OptionsClass extends React.Component {
                 updateOptions={this.props.actions.graphs.updateOptions}
                 language={this.props.reducers.languages.language}
                 isOpens={this.state.opens} 
-                openWidgets={this.props.openWidgets}
+                onWidgetOpen={this.props.onWidgetOpen}
                 onSectionToggle={this.handleSectionToggle}
                 nodes={this.props.nodes}
                 onColorSetAdd={this.handleColorSetAdd}
@@ -106,7 +101,7 @@ const OptionsFunc = (props) => {
         updateOptions,
         language,
         isOpens,
-        openWidgets,
+        onWidgetOpen,
         onSectionToggle,
         nodes,
         onMainLinkChange,
@@ -130,7 +125,7 @@ const OptionsFunc = (props) => {
                 updateOptions={updateOptions}
                 language={language}
                 isOpens={isOpens}
-                openWidgets={openWidgets}
+                onWidgetOpen={onWidgetOpen}
                 onSectionToggle={onSectionToggle}
                 onColorSetAdd={onColorSetAdd}
                 onColorSetChange={onColorSetChange}
@@ -227,11 +222,6 @@ const Graph = props => {
                 checked={options.graph.showOutgoingLinks}
                 onChange={value => {handleMainLinkChange('showOutgoingLinks', value)}}
             />
-            <SwitchBlock
-                label={<Language text={content.graph.showExtNeighbors} />}
-                checked={options.graph.showExtNeighbors}
-                onChange={value => {handleMainLinkChange('showExtNeighbors', value)}}
-            />
             <SubHeader title={<Language text={content.graph.nodeLabels} />} />
             <div className={optionClasses.doubleColumnBlock}>
                 <SwitchBlock
@@ -287,7 +277,7 @@ const Styles = props => {
         updateOptions,
         language,
         isOpens,
-        openWidgets,
+        onWidgetOpen,
         onSectionToggle,
         onColorSetAdd,
         onColorSetChange,
@@ -306,7 +296,7 @@ const Styles = props => {
                 options={options}
                 updateOptions={updateOptions}
                 language={language}
-                openWidgets={openWidgets}
+                onWidgetOpen={onWidgetOpen}
                 onColorSetAdd={onColorSetAdd}
                 onColorSetChange={onColorSetChange}
                 onColorSetRemove={onColorSetRemove}
@@ -317,7 +307,7 @@ const Styles = props => {
                         options={options}
                         updateOptions={updateOptions}
                         nodeType="main"
-                        openWidgets={openWidgets}
+                        onWidgetOpen={onWidgetOpen}
                     />
                 </Tab>
                 <Tab title="Nodes">
@@ -325,7 +315,7 @@ const Styles = props => {
                         options={options}
                         updateOptions={updateOptions}
                         nodeType="minor"
-                        openWidgets={openWidgets}
+                        onWidgetOpen={onWidgetOpen}
                     />
                 </Tab>
                 <Tab title="Links">
@@ -345,7 +335,7 @@ const ColorSet = props => {
     const { 
         options,
         language,
-        openWidgets,
+        onWidgetOpen,
         onColorSetChange,
         onColorSetRemove
     } = props;
@@ -365,7 +355,7 @@ const ColorSet = props => {
 
     const handleColorClick = index => {
         setFocusedColor(index);
-        openWidgets([
+        onWidgetOpen([
             {type: 'colorPicker', onColorChange: color => onColorSetChange(index, color), initColor: colorSet[index], onClose: handleWidgetClose}
         ]);
     }
@@ -422,7 +412,7 @@ const NodeStyles = props => {
         options,
         updateOptions,
         nodeType,
-        openWidgets
+        onWidgetOpen
     } = props;
 
     const handleOptionChange = async (element, key, value) => {
@@ -446,13 +436,13 @@ const NodeStyles = props => {
     }
 
     const handleColorClick = (element, key) => {
-        openWidgets([
+        onWidgetOpen([
             {type: 'colorPicker', onColorChange: color => handleColorValueChange(element, key, color)}
         ]);
     }
 
     const handleBorderClick = element => {
-        openWidgets([
+        onWidgetOpen([
             {type: 'colorPicker', onColorChange: color => handleColorValueChange(element, 'borderColor', color)},
             {
                 type: 'range',

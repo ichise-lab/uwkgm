@@ -1,32 +1,29 @@
 export const genLabelFromURI = uri => {
     const uriSections = uri.split('/');
     const identifierSections = uriSections[uriSections.length - 1].split('#');
-    const label = identifierSections[identifierSections.length - 1]
-        .replace('_', ' ')
-        .replace(/ +/g, ' ')
-        .replace(/([A-Z])/g, ' $1')
-        .trim();
+    const label = identifierSections[identifierSections.length - 1].trim();
 
     return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-export const shortenURI = uri => {
+export const shortenURI = (uri, catalogReducer) => {
     const dict = {
-        'http://www.w3.org/1999/02/22-rdf-syntax-ns#': 'rdf:',
-        'http://www.w3.org/2000/01/rdf-schema#': 'rdfs:',
-        'http://xmlns.com/foaf/0.1/': 'foaf:',
-        'http://www.w3.org/2002/07/owl#': 'owl:',
-        'http://www.w3.org/2001/XMLSchema#': 'xsd:',
-        'http://purl.org/dc/elements/1.1/': 'dc:'
+        rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+        rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
+        foaf: 'http://xmlns.com/foaf/0.1/',
+        owl: 'http://www.w3.org/2002/07/owl#',
+        xsd: 'http://www.w3.org/2001/XMLSchema#',
+        dc: 'http://purl.org/dc/elements/1.1/',
+        schema: 'https://schema.org/'
     }
 
     var short = uri;
     var shortened = false;
 
     for (const [key, value] of Object.entries(dict)) {
-        if (uri.includes(key)) {
+        if (uri.includes(value)) {
             shortened = true;
-            short = short.replace(key, value);
+            short = short.replace(value, key + ':');
         }
     }
 

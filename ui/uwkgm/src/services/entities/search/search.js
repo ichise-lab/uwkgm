@@ -24,7 +24,7 @@ import { styles } from './search.css';
 export const fetchSuggestions = (search, graph) => {
     var promise = new Promise((resolve, reject) => {
         request.json({
-            url: apiEndpoint + '/cui/graphs/entities/candidates',
+            url: apiEndpoint + '/databases/graphs/entities/candidates',
             params: {graph: graph, search: search},
             passError: true
         }).then(data => {

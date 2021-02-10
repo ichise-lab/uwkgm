@@ -34,15 +34,15 @@ import { content as options } from './options/options.content';
 import { content } from './mods.content';
 import { EntitySearchPopover } from 'services/entities/search/search';
 import { EntitySelector, EntitySelectorMenu, LanguageSelector } from 'services/entities/selector/selector';
-import { Selector, SelectorMenu } from 'templates/forms/forms';
+import { Selector, SelectorMenu } from 'components/templates/forms/forms';
 import { genLabelFromURI, shortenURI } from 'libs/rdf';
 import { getActiveCatalog } from 'services/catalogs/catalogs';
 import { getStyles } from 'styles/styles';
 import { Language } from 'services/languages/languages';
 import { Options as ModsOptions } from './options/options';
-import { Options } from 'components/console/templates/options';
+import { OptionContainer } from 'components/console/templates/options';
 import { request } from 'services/http';
-import { styles as formStyles} from 'templates/forms/forms.css';
+import { styles as formStyles} from 'components/templates/forms/forms.css';
 import { styles as globalStyles } from 'styles/styles.css';
 import { styles as optionStyles } from 'components/console/templates/options.css';
 import { styles as pageStyles } from 'components/console/templates/page.css';
@@ -148,6 +148,10 @@ class ModsClass extends React.Component {
         });
     }
 
+    handleEntityAddClick = () => {
+        
+    }
+
     handleReloadClick = () => {
         this.fetch(true);
     }
@@ -220,6 +224,7 @@ class ModsClass extends React.Component {
                 onRemoveClick={this.handleRemoveClick}
                 onSelectAllClick={this.handleSelectAllClick}
                 onCloneClick={this.handleCloneClick}
+                onEntityAddClick={this.handleEntityAddClick}
                 onReloadClick={this.handleReloadClick}
                 onItemHover={this.handleItemHover}
                 onItemEndHover={this.handleItemEndHover}
@@ -250,6 +255,7 @@ const ModsFunc = props => {
         onRemoveClick,
         onSelectAllClick,
         onCloneClick,
+        onEntityAddClick,
         onReloadClick,
         onItemHover,
         onItemEndHover,
@@ -325,16 +331,17 @@ const ModsFunc = props => {
                 onRemoveClick={onRemoveClick}
                 onSelectAllClick={onSelectAllClick}
                 onCloneClick={onCloneClick}
+                onEntityAddClick={onEntityAddClick}
                 onReloadClick={onReloadClick}
                 onCommitClick={handleCommitClick}
             />
-            <Options
+            <OptionContainer
                 title={<Language text={options.title} />}
                 isOptionsOpen={isOptionsOpen}
                 disabled={isCommitModalOpen}
             >
                 <ModsOptions />
-            </Options>
+            </OptionContainer>
             <CommitModal 
                 fetch={fetch}
                 isCommitModalOpen={isCommitModalOpen}
@@ -603,8 +610,8 @@ const EditItem = props => {
 
         request.json({
             method: 'GET',
-            url: apiEndpoint + '/cui/graphs/entities/entity',
-            params: {subject: uri, graph: catalogReducer.active},
+            url: apiEndpoint + '/databases/graphs/entities/entity',
+            params: {subject: uri, graph: getActiveCatalog(catalogReducer).uri},
         }).then(data => {
             if (isComponentMounted) {
                 setEntityDict(data);
@@ -832,7 +839,6 @@ const EditItem = props => {
     }
 
     const verify = () => {
-        console.log(tripleSelector.subject.entity);
         if (tripleSelector.subject.entity.uri !== null && tripleSelector.predicate.entity.uri !== null && tripleSelector.object.entity.uri !== null) {
             if (tripleSelector.object.type === 'entity' && !('new' in tripleSelector.predicate.entity) && !('new' in tripleSelector.object.entity)) {
                 const snappedTriple = JSON.stringify(tripleSelector);
@@ -999,7 +1005,7 @@ const EditItem = props => {
         if (entity.type === 'entity') {
             dict = {uri: entity.uri, label: entity.label};
         } else {
-            dict = {uri: entity.uri, label: shortenURI(entity.uri) || 'Custom'};
+            dict = {uri: entity.uri, label: shortenURI(entity.uri, catalogReducer) || 'Custom'};
         }
 
         setEntity(entityListSelector.target, dict);

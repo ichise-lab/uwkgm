@@ -27,13 +27,13 @@ import LabelBorderIcon from 'assets/icons/LabelBorder';
 import NodeBorderIcon from 'assets/icons/NodeBorder';
 import NodeColorIcon from 'assets/icons/NodeColor';
 
-import { ColorPopover, Selector, SelectorMenu } from 'templates/forms/forms';
+import { ColorPopover, Selector, SelectorMenu } from 'components/templates/forms/forms';
 import { EntitySearchPopover } from 'services/entities/search/search';
 import { EntitySelector } from 'services/entities/selector/selector';
 import { getStyles } from 'styles/styles';
 import { init, updateTools } from '../graphs.action';
 import { styles } from './rules.css';
-import { styles as formStyles} from 'templates/forms/forms.css';
+import { styles as formStyles} from 'components/templates/forms/forms.css';
 
 const IconPicker = React.lazy(() => import('components/console/viz/base/graphs/rules/icons/icons'));
 
@@ -88,7 +88,7 @@ export class RulesClass extends React.Component {
                 colorSet={this.props.reducers.graphs.options.styles.colorSet}
                 transition={this.state.transition}
                 iconCallback={this.state.iconCallback}
-                toggleRulePage={this.props.toggleRulePage}
+                onRulePageToggle={this.props.onRulePageToggle}
                 onIconOpen={this.handleIconOpen}
                 onIconClose={this.handleIconClose}
             />
@@ -106,7 +106,7 @@ const RulesFunc = props => {
         colorSet,
         transition,
         iconCallback,
-        toggleRulePage,
+        onRulePageToggle,
         onIconOpen,
         onIconClose
     } = props;
@@ -153,7 +153,7 @@ const RulesFunc = props => {
             </div>
             <div className={classes.actionContainer}>
                 <div className={classes.actionBlock}>
-                    <button type="button" className="btn btn-primary" style={{marginRight: 5}} onClick={toggleRulePage}>Close</button>
+                    <button type="button" className="btn btn-primary" style={{marginRight: 5}} onClick={onRulePageToggle}>Close</button>
                     <button type="button" className="btn btn-danger" style={{marginLeft: 5}} onClick={handleResetClick}>Restore Default</button>
                 </div>
             </div>

@@ -10,7 +10,6 @@
     "d3": "^5.16.0",
     "js-yaml": "^3.13.1",
     "jwt-decode": "^2.2.0",
-    "node-sass": "^4.14.1",
     "notistack": "^0.9.11",
     "react": "^16.13.1",
     "react-autosuggest": "^9.4.3",

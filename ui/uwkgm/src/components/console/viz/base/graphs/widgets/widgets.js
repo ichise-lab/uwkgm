@@ -45,7 +45,7 @@ export class Widgets extends React.Component {
                 return null;
             });
 
-            this.props.closeWidgets();
+            this.props.onWidgetClose();
         }
     }
 

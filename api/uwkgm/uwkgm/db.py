@@ -70,6 +70,9 @@ class Mongo(DocDBClient):
     def uwkgm(self):
         return super().client.uwkgm
 
+    def catalog(self, uri: str):
+        return self.catalogs.find_one({'uri': uri})
+
     @property
     def catalogs(self):
         return super().client.uwkgm.catalogs
@@ -92,8 +95,8 @@ class Virtuoso(GraphDBClient):
         endpoint = '%s/sparql/' % self.address if self.port is None else '%s:%d/sparql/' % (self.address, self.port)
         self.connector: SPARQLWrapper = SPARQLWrapper(endpoint)
 
-        if self.default_graph_uri is not None:
-            self.connector.addDefaultGraph(self.default_graph_uri)
+        # if self.default_graph_uri is not None:
+        #    self.connector.addDefaultGraph(self.default_graph_uri)
 
         self.connector.setReturnFormat(JSON)
         self.connector.setTimeout(30)

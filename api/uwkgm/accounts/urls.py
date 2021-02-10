@@ -12,7 +12,7 @@ from rest_framework_simplejwt.views import TokenVerifyView
 
 from .routers import CustomUserRouter
 from accounts.views import accounts, helps, throttling, dashboard
-from accounts.views import password, activation, jwt
+from accounts.views import password, activation
 from accounts.serializers.jwt import CustomObtainPairView
 
 

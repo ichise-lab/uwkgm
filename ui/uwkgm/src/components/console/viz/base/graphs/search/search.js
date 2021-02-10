@@ -35,7 +35,7 @@ export class EntitySearchClass extends BaseEntitySearch {
     handleAddClick = () => {
         const suggestion = this.state.suggestions[this.state.selectedId];
         if (typeof suggestion !== 'undefined' && typeof suggestion.label !== 'undefined') {
-            this.props.onAddNode({label: suggestion.label, entity: suggestion.uri, types: suggestion.types});
+            this.props.onNodeAdd({label: suggestion.label, entity: suggestion.uri, types: suggestion.types});
             this.setState(() => ({
                 search: '',
                 suggestions: null,
@@ -109,8 +109,8 @@ const EntitySearchFunc = props => {
                                 onKeyDown={onInputKeyDown}
                                 className={classes.search.input}
                                 style={{backgroundColor: theme.palette.type === 'light' ? 'white' : theme.palette.background.default}}
-                                autocomplete="off"
-                                spellcheck="false"
+                                autoComplete="off"
+                                spellCheck="false"
                                 InputProps={{
                                     endAdornment:
                                     <InputAdornment position="end">

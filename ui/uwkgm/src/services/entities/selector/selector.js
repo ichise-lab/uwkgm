@@ -13,7 +13,7 @@ import { EntitySearchSuggestions } from 'services/entities/search/search';
 import { getStyles } from 'styles/styles';
 import { iso_639_1 } from 'libs/languages';
 import { styles } from './selector.css';
-import { styles as formStyles } from 'templates/forms/forms.css';
+import { styles as formStyles } from 'components/templates/forms/forms.css';
 import { styles as searchStyles } from 'services/entities/search/search.css';
 
 export const EntitySelector = props => {
@@ -119,8 +119,8 @@ export const EntitySelectorMenu = props => {
                     placeholder="URI/Label" 
                     onChange={handleInputChange} 
                     onKeyDown={handleInputKeyDown}
-                    autocomplete="off"
-                    spellcheck="false"
+                    autoComplete="off"
+                    spellCheck="false"
                     autoFocus 
                 />
                 <EntitySearchSuggestions 

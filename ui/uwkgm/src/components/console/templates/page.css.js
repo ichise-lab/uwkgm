@@ -45,13 +45,11 @@ export const styles = {
         },
 
         toolHeadedContent: {
-            paddingTop: 112
+            paddingTop: 127
         },
 
         title: {
             width: '100%',
-            marginTop: 0,
-            marginBottom: 10,
             color: theme.palette.text.primary,
             fontWeight: 'bold',
             fontSize: '2em'
@@ -65,7 +63,7 @@ export const styles = {
             width: '100%',
             marginTop: 10,
             marginBottom: 10,
-            borderBottom: theme.palette.type === 'light' ? '1px solid rgba(0, 0, 0, .1)' : '1px solid rgba(255, 255, 255, .1)'
+            borderBottom: '1px solid ' + (theme.palette.type === 'light' ? 'rgba(0, 0, 0, .1)' : 'rgba(255, 255, 255, .1)')
         }
     })),
 
@@ -85,15 +83,25 @@ export const styles = {
         container: {
             width: '100%',
             marginTop: 20,
-            borderTop: theme.palette.type === 'light' ? '1px solid rgba(0, 0, 0, .2)' : '1px solid rgba(255, 255, 255, .2)'
+            borderTop: '1px solid ' + (theme.palette.type === 'light' ? 'rgba(0, 0, 0, .2)' : 'rgba(255, 255, 255, .2)')
+        },
+
+        sectionTitleBlock: {
+            width: '100%',
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            color: theme.palette.text.secondary,
+            fontSize: '.9em',
+            marginTop: 10,
+            marginBottom: 10
         },
 
         itemBlock: {
             display: 'flex',
             width: '100%',
             paddingTop: 10,
-            paddingBottom: 20,
-            borderBottom: theme.palette.type === 'light' ? '1px solid rgba(0, 0, 0, .2)' : '1px solid rgba(255, 255, 255, .2)',
+            paddingBottom: 10,
+            borderBottom: '1px solid ' + (theme.palette.type === 'light' ? 'rgba(0, 0, 0, .2)' : 'rgba(255, 255, 255, .2)'),
             cursor: 'pointer',
             alignItems: 'center',
 
@@ -102,12 +110,12 @@ export const styles = {
             }
         },
 
-        itemDetail: {
+        itemDetailBlock: {
             flex: 1,
             paddingLeft: 20
         },
 
-        itemActions: {
+        itemActionsBlock: {
             flex: '0 0 100px',
             textAlign: 'right',
             paddingRight: 10
