@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# For a Kubernetes cluster, set the address to http://uwkgm-corenlp-service
-export UWKGM_PKG_CORENLP_ADDRESS=http://localhost
-export UWKGM_PKG_CORENLP_PORT=8080

@@ -1,20 +1,15 @@
 #!/bin/bash
 
-manage.conf.init() {
-    mkdir -p conf
+function config() {
+   KEY=${1::-1}
+   VALUE=
+   VALUES=($@)
 
-    manage.conf.load servers Server
-    manage.conf.load databases Database
-    manage.conf.load secrets Secret
-    
-    echo ""
-}
+   for i in $(seq 1 $((${#VALUES[@]} - 1))); do
+      VALUE+="${VALUES[i]} "
+   done
 
-manage.conf.load() {
-    if [[ -f "conf/$1" ]]; then
-        echo "[UWKGM: INFO] $2 configuration found."
-    else
-        cp "templates/cms/conf/$1.template" "conf/$1"
-        echo "[UWKGM: INFO] $2 configuration not found. Created from a template."
-    fi
+   if [[ ${!KEY} == "" ]]; then
+      eval "export $KEY=$VALUE"
+   fi
 }

@@ -1,5 +1,0 @@
-#!/bin/bash
-
-export UWKGM_PKG_CORENLP_TITLE="CoreNLP"
-export UWKGM_PKG_CORENLP_VERSION="0.1.0"
-export UWKGM_PKG_CORENLP_DESCRIPTION="Stanford CoreNLP server (Spring Boot)"

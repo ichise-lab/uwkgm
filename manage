@@ -1,14 +1,17 @@
 #!/bin/bash
 
-source bin/manage
-source bin/libs/args
+export UWKGM_BASE_DIR="$(realpath $(dirname $BASH_SOURCE))"
 
-export UWKGM_ENV
-export UWKGM_ARGS
-export UWKGM_KWARGS
-export UWKGM_INTERACTIVE
-export UWKGM_MASTER_PASSWORD
+source $UWKGM_BASE_DIR/bin/conf
+source $UWKGM_BASE_DIR/conf/uwkgm
+source $UWKGM_BASE_DIR/conf/databases
 
-args.parse "$@"
+if [[ $1 == api ]]; then
+    chmod +x $UWKGM_BASE_DIR/bin/api
+    $UWKGM_BASE_DIR/bin/api $@
 
-manage
+elif [[ $1 == ui ]]; then
+    chmod +x $UWKGM_BASE_DIR/bin/ui
+    $UWKGM_BASE_DIR/bin/ui $@
+
+fi

@@ -1,5 +1,0 @@
-#!/bin/bash
-
-export UWKGM_HOST_ADDRESS=http://localhost
-export UWKGM_API_ENDPOINT=http://localhost/api
-export UWKGM_AUTH_ENDPOINT=http://localhost/api

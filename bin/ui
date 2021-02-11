@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [[ $2 == install ]]; then
+    npm install --unsafe-perm=true --allow-root --prefix $UWKGM_BASE_DIR/ui/uwkgm
+    npm audit fix --prefix $UWKGM_BASE_DIR/ui/uwkgm
+
+elif [[ $2 == serve ]]; then
+    export HOST=$UWKGM_UI_HOST
+    export PORT=$UWKGM_UI_PORT
+    export REACT_APP_ENV=$UWKGM_ENV
+    export REACT_APP_VERSION=$UWKGM_VERSION
+    export REACT_APP_API_ENDPOINT=$UWKGM_API_ENDPOINT
+    export REACT_APP_AUTH_ENDPOINT=$UWKGM_AUTH_ENDPOINT
+    export REACT_APP_DEFAULT_LANGUAGE=$UWKGM_DEFAULT_LANGUAGE
+    export REACT_APP_VISUALIZER_DEFAULT_LANGUAGE=$UWKGM_VISUALIZER_DEFAULT_LANGUAGE
+
+    npm start --prefix $UWKGM_BASE_DIR/ui/uwkgm
+fi

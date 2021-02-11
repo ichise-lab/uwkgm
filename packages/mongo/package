@@ -1,9 +1,0 @@
-#!/bin/bash
-
-export UWKGM_PKG_MONGO_TITLE="MongoDB"
-export UWKGM_PKG_MONGO_VERSION="4.2.3"
-export UWKGM_PKG_MONGO_DESCRIPTION="MongoDB Community Edition"
-
-export UWKGM_PKG_MONGO_EXPRESS_TITLE="Mongo Express"
-export UWKGM_PKG_MONGO_EXPRESS_VERSION="0.54"
-export UWKGM_PKG_MONGO_EXPRESS_DESCRIPTION="Web-based MongoDB admin interface"

@@ -8,7 +8,7 @@ from dorest import conf
 
 
 class DBClient:
-    address: str
+    host: str
     port: int
     username: str
     password: str
@@ -27,16 +27,16 @@ class DBClient:
 
 
 class DocDBClient(DBClient):
-    def __init__(self, address: str = None, port: int = None, username: str = None, password: str = None):
-        self.address = address or (os.environ['UWKGM_DB_DOCS_ADDRESS'] if 'UWKGM_DB_DOCS_ADDRESS' in os.environ else None)
+    def __init__(self, host: str = None, port: int = None, username: str = None, password: str = None):
+        self.host = host or (os.environ['UWKGM_DB_DOCS_HOST'] if 'UWKGM_DB_DOCS_HOST' in os.environ else None)
         self.port = port or (int(os.environ['UWKGM_DB_DOCS_PORT']) if 'UWKGM_DB_DOCS_PORT' in os.environ and os.environ['UWKGM_DB_DOCS_PORT'] != '' else None)
         self.username = username or (os.environ['UWKGM_DB_DOCS_USERNAME'] if 'UWKGM_DB_DOCS_USERNAME' in os.environ else None)
         self.password = password or (os.environ['UWKGM_DB_DOCS_PASSWORD'] if 'UWKGM_DB_DOCS_PASSWORD' in os.environ else None)
 
 
 class GraphDBClient(DBClient):
-    def __init__(self, address: str = None, port: int = None, username: str = None, password: str = None):
-        self.address = address or (os.environ['UWKGM_DB_GRAPHS_ADDRESS'] if 'UWKGM_DB_GRAPHS_ADDRESS' in os.environ else None)
+    def __init__(self, host: str = None, port: int = None, username: str = None, password: str = None):
+        self.host = host or (os.environ['UWKGM_DB_GRAPHS_HOST'] if 'UWKGM_DB_GRAPHS_HOST' in os.environ else None)
         self.port = port or (int(os.environ['UWKGM_DB_GRAPHS_PORT']) if 'UWKGM_DB_GRAPHS_PORT' in os.environ and os.environ['UWKGM_DB_GRAPHS_PORT'] != '' else None)
         self.username = username or (os.environ['UWKGM_DB_GRAPHS_USERNAME'] if 'UWKGM_DB_GRAPHS_USERNAME' in os.environ else None)
         self.password = password or (os.environ['UWKGM_DB_GRAPHS_PASSWORD'] if 'UWKGM_DB_GRAPHS_PASSWORD' in os.environ else None)
@@ -52,7 +52,7 @@ class Mongo(DocDBClient):
             collection.insert_many(conf.resolve('catalogs.init'))
 
     def connect(self):
-        endpoint = 'mongodb://%s%s' % (self.address, ':%d' % self.port if self.port is not None else '')
+        endpoint = 'mongodb://%s%s' % (self.host, ':%d' % self.port if self.port is not None else '')
 
         if self.username == '' and self.password == '':
             self.connector: MongoClient = MongoClient(endpoint)
@@ -85,14 +85,14 @@ class Mongo(DocDBClient):
 class Virtuoso(GraphDBClient):
     default_graph_uri: str
 
-    def __init__(self, address: str = None, port: int = None, username: str = None, password: str = None,
+    def __init__(self, host: str = None, port: int = None, username: str = None, password: str = None,
                 default_graph_uri: str = None):
-        super().__init__(address, port, username, password)
+        super().__init__(host, port, username, password)
         self.default_graph_uri = default_graph_uri or os.environ['UWKGM_DB_GRAPHS_DEFAULT_GRAPH'] \
             if 'UWKGM_DB_GRAPHS_DEFAULT_GRAPH' in os.environ else None
 
     def connect(self):
-        endpoint = '%s/sparql/' % self.address if self.port is None else '%s:%d/sparql/' % (self.address, self.port)
+        endpoint = '%s/sparql/' % self.host if self.port is None else '%s:%d/sparql/' % (self.host, self.port)
         self.connector: SPARQLWrapper = SPARQLWrapper(endpoint)
 
         # if self.default_graph_uri is not None:

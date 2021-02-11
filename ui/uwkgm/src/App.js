@@ -51,7 +51,7 @@ export class AppClass extends React.Component {
     }
 
     componentDidMount() {
-        this.snackbar.open('Running version ' + process.env.REACT_APP_UI_VERSION + ' in ' + process.env.REACT_APP_ENV + ' environment', 'success', 3000);
+        this.snackbar.open('Running version ' + process.env.REACT_APP_VERSION + ' in ' + process.env.REACT_APP_ENV + ' environment', 'success', 3000);
     }
 
     render() {

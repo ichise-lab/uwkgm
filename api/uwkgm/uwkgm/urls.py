@@ -20,11 +20,8 @@ from django.urls import include, path
 from dorest import packages
 
 from uwkgm import url_prefix
-from uwkgm.views import home_page, api_page
 
 urlpatterns = [
-    path('', home_page),
-    path('api/', api_page),
     path('%s/admin/' % url_prefix, admin.site.urls),
     path('%s/accounts/' % url_prefix, include('accounts.urls')),
 ]

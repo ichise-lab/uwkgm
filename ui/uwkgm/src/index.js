@@ -7,15 +7,9 @@ import * as serviceWorker from './serviceWorker';
 import { App } from './App';
 import { store } from './App.redux';
 
-import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
-
 ReactDOM.render(
     <Provider store={store}>
-        <GoogleReCaptchaProvider
-            reCaptchaKey="6LdZKPMZAAAAAFwLT-nPOzlyYprQAWr_xyr7bY9C"
-        >
-            <App />
-        </GoogleReCaptchaProvider>
+        <App />
     </Provider> 
 , document.getElementById('root'));
 
