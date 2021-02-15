@@ -12,5 +12,4 @@ __pycache__/
 /api/uwkgm/dev
 /api/uwkgm/private
 /api/uwkgm/db.sqlite3
-/conf
 /ui/uwkgm/node_modules
