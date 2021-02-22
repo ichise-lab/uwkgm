@@ -14,6 +14,7 @@ import { auth } from 'services/auth';
 import { content } from './login.content';
 import { getStyles } from 'styles/styles';
 import { Language, LanguageSelector } from 'services/languages/languages';
+import { publicURL } from 'services/servers';
 import { styles } from './login.css';
 
 import castleImg from 'assets/images/login/castle.png';
@@ -37,7 +38,7 @@ export const Login = props => {
     };
 
     const handleSubmit = event => {
-        const redirectTo = location.state || {from: {pathname: "/console"}};
+        const redirectTo = location.state || {from: {pathname: `${publicURL}/console`}};
 
         event.preventDefault();
         auth.login(

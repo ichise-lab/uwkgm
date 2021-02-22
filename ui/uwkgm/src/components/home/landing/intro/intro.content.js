@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from "react-router-dom";
 
+import { publicURL } from 'services/servers';
+
 export const content = {
     uwkgm: {
         en: 'UWKGM'
@@ -36,7 +38,7 @@ export const content = {
     alternative: {
         en: () => (
             <React.Fragment>
-                Or <Link to="/console">log in</Link> if you already have an account
+                Or <Link to={`${publicURL}/console`}>log in</Link> if you already have an account
             </React.Fragment>
         ),
         jp: () => (

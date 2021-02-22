@@ -1,6 +1,7 @@
 import { auth } from 'services/auth';
 
 export const request = props => {
+    console.log(props);
     const url = new URL(props.url);
     const isJSON = props.json;
     const passError = props.passError;

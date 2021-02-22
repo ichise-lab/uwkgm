@@ -20,6 +20,7 @@ import { darkTheme, lightTheme } from 'services/themes/themes.css';
 import { Demo } from 'components/auth/demo/demo';
 import { Login } from 'components/auth/login/login';
 import { LoadingScreen } from 'components/common/loaders/screen/screen';
+import { publicURL } from 'services/servers';
 
 export class AppClass extends React.Component {
     snackbar = {
@@ -85,31 +86,31 @@ const AppFunc = (props) => {
     };
 
     return (
-        <Router>
+        <Router basename="./">
             <Switch>
-                <Route exact path="/">
-                  <Redirect to="/home" />
+                <Route exact path={`${publicURL}/`}>
+                  <Redirect to={`${publicURL}/home`} />
                 </Route>
-                <Route path="/home">
+                <Route path={`${publicURL}/home`}>
                     <Suspense fallback={<LoadingScreen text="Loading UWKGM..." />}>
                         <Home />
                     </Suspense>
                 </Route>
-                <Route path="/login">
+                <Route path={`${publicURL}/login`}>
                     <Login snackbar={snackbar} />
                 </Route>
-                <Route path="/register">
+                <Route path={`${publicURL}/register`}>
                     <Suspense fallback={<LoadingScreen text="Loading registration page..." />}>
                         <Register snackbar={snackbar} />
                     </Suspense>
                 </Route>
-                <Route path="/demo">
+                <Route path={`${publicURL}/demo`}>
                     <Demo />
                 </Route>
-                <Route path="/logout">
+                <Route path={`${publicURL}/logout`}>
                     <Logout snackbar={snackbar} />
                 </Route>
-                <PrivateRoute path="/console">
+                <PrivateRoute path={`${publicURL}/console`}>
                     <Suspense fallback={<LoadingScreen text="Loading console..." />}>
                         <Console />
                     </Suspense>

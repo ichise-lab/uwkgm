@@ -16,5 +16,5 @@ elif [[ $2 == serve ]]; then
 
     echo "Preparing the API server..."
     export UWKGM_API_STATE=running
-    python3 $UWKGM_BASE_DIR/api/uwkgm/manage.py runserver $UWKGM_API_HOST:$UWKGM_API_PORT
+    python3 $UWKGM_BASE_DIR/api/uwkgm/manage.py runserver $UWKGM_SERV_API_HOST:$UWKGM_SERV_API_PORT
 fi

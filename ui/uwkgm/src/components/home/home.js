@@ -5,6 +5,7 @@ import Container from '@material-ui/core/Container';
 import { getStyles } from 'styles/styles';
 import { Header } from './header/header';
 import { Landing } from './landing/landing';
+import { publicURL } from 'services/servers';
 import { Route } from "react-router-dom";
 import { styles } from './home.css';
 
@@ -23,7 +24,7 @@ const HomeFunc = props => {
         <div className={classes.body}>
             <Container maxWidth="lg" className={classes.container}>
                 <Header />
-                <Route path="/home/" component={Landing} />
+                <Route path={`${publicURL}/home`} component={Landing} />
             </Container>
         </div>
     );

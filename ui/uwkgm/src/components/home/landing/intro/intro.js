@@ -7,6 +7,7 @@ import { useTheme } from "@material-ui/core/styles";
 import { content } from './intro.content';
 import { getStyles } from 'styles/styles';
 import { Language } from 'services/languages/languages';
+import { publicURL } from 'services/servers';
 import { styles } from './intro.css';
 
 import castleImg from 'assets/images/landing/castle.png';
@@ -17,11 +18,11 @@ export const Intro = () => {
     const history = useHistory();
 
     const handleRegisterClick = () => {
-        history.replace({pathname: '/register'});
+        history.replace({pathname: `${publicURL}/register`});
     }
 
     const handleDemoClick = () => {
-        history.replace({pathname: '/demo'});
+        history.replace({pathname: `${publicURL}/demo`});
     }
 
     return (

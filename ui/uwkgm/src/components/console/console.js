@@ -36,6 +36,7 @@ import { getStyles } from 'styles/styles';
 import { Language, LanguageSelector } from 'services/languages/languages';
 import { Nav } from './nav/nav';
 import { LoadingScreen } from 'components/common/loaders/screen/screen';
+import { publicURL } from 'services/servers';
 import { styles } from './console.css';
 import { updateActiveCatalog, updateCatalogs } from 'services/catalogs/catalogs.action';
 import { updateOptions } from './console.action';
@@ -187,7 +188,7 @@ const ConsoleFunc = props => {
     }
 
     const handleLogOut = () => {
-        history.replace({pathname: '/logout'});
+        history.replace({pathname: `${publicURL}/logout`});
     }
 
     return (

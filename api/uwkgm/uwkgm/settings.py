@@ -213,4 +213,4 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
-STATIC_URL = '/api/v0.2/static/'
+STATIC_URL = os.environ['UWKGM_SERV_API_BASE_URL'] + '/static/'

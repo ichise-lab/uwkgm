@@ -4,6 +4,7 @@ export UWKGM_BASE_DIR="$(realpath $(dirname $BASH_SOURCE))"
 
 source $UWKGM_BASE_DIR/bin/conf
 source $UWKGM_BASE_DIR/conf/uwkgm
+source $UWKGM_BASE_DIR/conf/servers
 source $UWKGM_BASE_DIR/conf/databases
 
 if [[ $1 == api ]]; then
