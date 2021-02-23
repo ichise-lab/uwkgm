@@ -18,20 +18,22 @@ from dorest.decorators import endpoint
 
 
 @endpoint(['GET'], requires=[IsAuthenticated])
-def dbpedia(triple: Tuple[str, str, str], predicate: str) -> bool:
+def dbpedia(triple: Tuple[str, str, str], predicate: str, graph: str) -> bool:
     """Verify domain-range agreement using DBpedia's ontology
 
     :param triple: A triple (subject's entity, predicate, object's entity)
            :ex: ["http://dbpedia.org/resource/Barack_Obama", "bear in", "http://dbpedia.org/resource/Hawaii"]
     :param predicate: Entity of the predicate to be verified
            :ex: http://dbpedia.org/ontology/birthPlace
+    :param graph: Graph URI
+           :ex: http://dbpedia.org
     :return: True if the predicate does not constitute domain-range violation
     """
 
     # NOTE: Since DBpedia is expected to be the primary service for ontology look-up in this project,
     #       removing part of the URI helps reduce redundant information showed on a screen.
     #       The following lines of code should be modified when the service endpoint is changed.
-    sparql_endpoint = '%s%s/sparql/' % (os.environ['UWKGM_DB_GRAPHS_ADDRESS'],
+    sparql_endpoint = '%s%s/sparql/' % (os.environ['UWKGM_DB_GRAPHS_HOST'],
                                         ':%s' % os.environ['UWKGM_DB_GRAPHS_PORT']
                                         if 'UWKGM_DB_GRAPHS_PORT' in os.environ else '')
 
@@ -39,11 +41,15 @@ def dbpedia(triple: Tuple[str, str, str], predicate: str) -> bool:
                  (predicate.replace('http://dbpedia.org/ontology/', ''), sparql_endpoint), dbpedia)
 
     sparql = SPARQLWrapper(sparql_endpoint)
-    sparql.setQuery('SELECT DISTINCT ?vr WHERE {{ '
-                    '<{0}> <http://www.w3.org/2000/01/rdf-schema#range> ?rp. '
-                    '<{1}> ?vr ?rp. }}'.format(predicate, triple[2]))
+    sparql.setQuery('SELECT DISTINCT ?vr FROM <{0}> WHERE {{ '
+                    '<{1}> <http://www.w3.org/2000/01/rdf-schema#range> ?rp. '
+                    '<{2}> ?vr ?rp. }}'.format(graph, predicate, triple[2]))
 
     sparql.setReturnFormat(JSON)
+
+    print('SELECT DISTINCT ?vr FROM <{0}> WHERE {{ '
+                    '<{1}> <http://www.w3.org/2000/01/rdf-schema#range> ?rp. '
+                    '<{2}> ?vr ?rp. }}'.format(graph, predicate, triple[2]))
 
     try:
         results = sparql.query().convert()

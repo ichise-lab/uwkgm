@@ -13,7 +13,7 @@ export const content = [
                             en: 'Dashboard',
                             jp: 'ダッシュボード'
                         },
-                        link: '/console/home/dashboard'
+                        link: 'console/home/dashboard'
                     }
                 ]
             }
@@ -54,7 +54,7 @@ export const content = [
                         title: {
                             en: 'Catalogs',
                         },
-                        link: '/console/catalogs'
+                        link: 'console/catalogs'
                     }
                 ]
             },
@@ -86,7 +86,7 @@ export const content = [
                             en: 'Modifiers',
                             jp: '修飾子'
                         },
-                        link: '/console/mods'
+                        link: 'console/mods'
                     }
                 ]
             }
@@ -105,7 +105,7 @@ export const content = [
                             en: 'Explorer',
                             jp: 'エクスプローラー'
                         },
-                        link: '/console/api/explorer'
+                        link: 'console/api/explorer'
                     },
                     {
                         title: {
@@ -128,7 +128,7 @@ export const content = [
                             en: 'Visualizer',
                             jp: '視覚化'
                         },
-                        link: '/console/graphs/visualizer'
+                        link: 'console/graphs/visualizer'
                     },
                     {
                         title: {
@@ -182,7 +182,7 @@ export const content = [
                             en: 'Log out',
                             jp: 'ログアウト'
                         },
-                        link: '/logout'
+                        link: 'logout'
                     }
                 ]
             }

@@ -61,7 +61,7 @@ export const Login = props => {
     }
 
     const handleRegisterClick = () => {
-        history.replace({pathname: '/register'});
+        history.replace({pathname: `${publicURL}/register`});
     }
 
     return (
@@ -134,7 +134,7 @@ export const Login = props => {
                         </div>
                         <div className={classes.footer}>
                             <ul>
-                                <li><Link to="/home"><Language text={content.home} /></Link></li>
+                                <li><Link to={`${publicURL}/home`}><Language text={content.home} /></Link></li>
                                 <li style={{opacity: .3}}><Language text={content.help} /></li>
                                 <li style={{opacity: .3}}><Language text={content.privacy} /></li>
                                 <li style={{opacity: .3}}><Language text={content.terms} /></li>

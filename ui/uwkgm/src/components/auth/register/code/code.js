@@ -6,6 +6,7 @@ import { useTheme } from '@material-ui/core/styles';
 
 import { apiEndpoint } from 'services/servers';
 import { getStyles } from 'styles/styles';
+import { publicURL } from 'services/servers';
 import { styles } from './code.css';
 
 import logoGreyImg from 'assets/images/logos/64x64-grey.png';
@@ -72,11 +73,11 @@ export const Code = props => {
     }
 
     const handleLoginClick = () => {
-        history.replace({pathname: '/console'});
+        history.replace({pathname: `${publicURL}/console`});
     }
 
     const handleCancelClick = () => {
-        history.replace({pathname: '/home'});
+        history.replace({pathname: `${publicURL}/home`});
     }
 
     return (

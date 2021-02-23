@@ -22,11 +22,13 @@ from packages.kgmt.endpoints.verification import verify
 
 
 @endpoint(['GET'], requires=[IsAuthenticated])
-def scoring(triples: List[Tuple[str, str, str]], n_candidates_threshold: int = 5) -> List[Tuple[str, str, str]]:
+def scoring(triples: List[Tuple[str, str, str]], graph: str, n_candidates_threshold: int = 5) -> List[Tuple[str, str, str]]:
     """Replace predicates with linked predicates (URIs)
 
     :param triples: A list of triples to be processed [(subject, predicate, object), ...]
            :ex: [["http://dbpedia.org/resource/Barack_Obama", "bear in", "http://dbpedia.org/resource/Hawaii"]]
+    :param graph: Graph URI
+           :ex: http://dbpedia.org
     :param n_candidates_threshold: A maximum number of candidates to be verified.
                                    The verification algorithm may take a very long time to verify a large set of candidates
            :ex: 5
@@ -43,7 +45,7 @@ def scoring(triples: List[Tuple[str, str, str]], n_candidates_threshold: int = 5
 
         # Choose a candidate with highest mapping_score that is also in a domain range
         for candidate in candidates[:n_candidates_threshold]:
-            if verify.agreement(triple, candidate[0]):
+            if verify.agreement(triple, candidate[0], graph):
                 linked_triples.append((triple[0], candidate[0], triple[2]))
                 break
 

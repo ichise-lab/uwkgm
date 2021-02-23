@@ -6,6 +6,7 @@ source $UWKGM_BASE_DIR/bin/conf
 source $UWKGM_BASE_DIR/conf/uwkgm
 source $UWKGM_BASE_DIR/conf/servers
 source $UWKGM_BASE_DIR/conf/databases
+source $UWKGM_BASE_DIR/conf/packages
 
 if [[ $1 == api ]]; then
     chmod +x $UWKGM_BASE_DIR/bin/api

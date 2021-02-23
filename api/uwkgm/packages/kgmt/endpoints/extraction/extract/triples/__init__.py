@@ -16,12 +16,14 @@ from .raw import openie as extract_raw
 
 
 @endpoint(['GET'], requires=[IsAuthenticated])
-def linked(text: str) -> List[Tuple[str, str, str]]:
+def linked(text: str, graph: str) -> List[Tuple[str, str, str]]:
     """Extract linked triples from a text
 
     :param text: A string to be extracted
            :ex: Barack Obama born in Hawaii
+    :param graph: Graph URI
+           :ex: http://dbpedia.org
     :return: A list of triples
     """
 
-    return map.predicates(aggregate.triples(extract_raw(text), map.entities(text)))
+    return map.predicates(aggregate.triples(extract_raw(text), map.entities(text)), graph)

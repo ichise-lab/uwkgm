@@ -8,6 +8,7 @@ __pycache__/
 
 .DS_Store
 .idea
+/conf
 /api/env
 /api/uwkgm/dev
 /api/uwkgm/private

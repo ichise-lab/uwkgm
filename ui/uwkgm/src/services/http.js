@@ -1,7 +1,6 @@
 import { auth } from 'services/auth';
 
 export const request = props => {
-    console.log(props);
     const url = new URL(props.url);
     const isJSON = props.json;
     const passError = props.passError;
@@ -24,6 +23,8 @@ export const request = props => {
     settings.headers = settings.headers || {};
     settings.headers['Authorization'] = 'Bearer ' + auth.getTokens().access;
     url.search = new URLSearchParams(params).toString();
+
+    console.log(settings);
 
     var promise = new Promise((resolve, reject) => {
         fetch(url, settings)

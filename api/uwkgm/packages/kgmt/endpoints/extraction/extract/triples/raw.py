@@ -24,7 +24,7 @@ def openie(text: str) -> List[Tuple[str, str, str]]:
     :return: A list of triples
     """
 
-    server = '%s%s' % (os.environ['UWKGM_PKG_CORENLP_ADDRESS'],
+    server = '%s%s' % (os.environ['UWKGM_PKG_CORENLP_HOST'],
                        ':%d' % int(os.environ['UWKGM_PKG_CORENLP_PORT'])
                        if 'UWKGM_PKG_CORENLP_PORT' in os.environ else '')
 

@@ -86,7 +86,7 @@ const AppFunc = (props) => {
     };
 
     return (
-        <Router basename="./">
+        <Router basename="/">
             <Switch>
                 <Route exact path={`${publicURL}/`}>
                   <Redirect to={`${publicURL}/home`} />
@@ -127,7 +127,7 @@ const PrivateRoute = ({ children, ...rest }) => (
             auth.isLoggedin() ? ( children ) : (
                 <Redirect
                     to={{
-                        pathname: "/login",
+                        pathname: `${publicURL}/login`,
                         state: { from: location }
                     }}
                 />

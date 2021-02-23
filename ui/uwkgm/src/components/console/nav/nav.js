@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import { connect } from "react-redux";
-import { Link, useRouteMatch } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import Avatar from '@material-ui/core/Avatar';
@@ -38,6 +38,7 @@ import { auth } from 'services/auth';
 import { content } from './nav.content';
 import { getStyles } from 'styles/styles';
 import { Language } from 'services/languages/languages';
+import { publicURL } from 'services/servers';
 import { styles } from './nav.css';
 
 const iconMap = {
@@ -129,7 +130,7 @@ const NavExtendedFunc = props => {
         >
             <div className={classes.header}>
                 <div>
-                    <Link to="/"><img src={theme.palette.type === 'light' ? logoImg : logoGreyImg} alt="UWKGM" /></Link>
+                    <Link to={`${publicURL}/`}><img src={theme.palette.type === 'light' ? logoImg : logoGreyImg} alt="UWKGM" /></Link>
                 </div>
                 <div>UWKGM</div>
                 <IconButton onClick={onNavClose}>
@@ -261,11 +262,10 @@ const NavShrinkedGroup = props => {
 const NavItem = props => {
     const classes = getStyles(styles.extended);
     const { item, parent, onItemClick } = props;
-    const { url } = useRouteMatch();
 
     return (
         (!('restriction' in item) || (item.restriction === 'admin' && auth.isAdmin())) ?
-            <Link to={('link' in item) ? item.link : '#'} className={classes.linkedItem} style={{textDecoration: 'none'}}>
+            <Link to={('link' in item) ? `${publicURL}/${item.link}` : '#'} className={classes.linkedItem} style={{textDecoration: 'none'}}>
                 <ListItem button className={clsx({[parent === 'extended']: classes.nestedItem})} onClick={onItemClick}>
                     <ListItemText primary={
                         <Typography className={classes.itemTitle} style={{fontSize: '.9em'}}>

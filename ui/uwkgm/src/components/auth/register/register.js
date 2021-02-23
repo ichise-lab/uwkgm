@@ -11,7 +11,8 @@ import { apiEndpoint } from 'services/servers';
 import { auth } from 'services/auth';
 import { Code } from './code/code';
 import { getStyles } from 'styles/styles';
-import { Language, LanguageSelector } from 'services/languages/languages';
+import { LanguageSelector } from 'services/languages/languages';
+import { publicURL } from 'services/servers';
 import { styles } from './register.css';
 
 import castleImg from 'assets/images/login/castle.png';
@@ -150,7 +151,7 @@ const Form = props => {
     } = props;
 
     const handleCancelClick = () => {
-        history.replace({pathname: '/home'});
+        history.replace({pathname: `${publicURL}/home`});
     }
 
     return (
@@ -219,7 +220,7 @@ const Form = props => {
                     </div>
                     <div className={classes.footer}>
                         <ul>
-                            <li><Link to="/home">Home</Link></li>
+                            <li><Link to={`${publicURL}/home`}>Home</Link></li>
                             <li style={{opacity: .3}}>Help</li>
                             <li style={{opacity: .3}}>Privacy</li>
                             <li style={{opacity: .3}}>Terms</li>
@@ -239,7 +240,7 @@ const Success = props => {
     const { email, password, snackbar } = props;
 
     const handleContinueClick = () => {
-        auth.login(history, {from: {pathname: "/console"}}, email, password, () => {}, () => {});
+        auth.login(history, {from: {pathname: `${publicURL}/console`}}, email, password, () => {}, () => {});
         snackbar.open('Successfully logged in as ' + email, 'success', 2000);
     }
 
