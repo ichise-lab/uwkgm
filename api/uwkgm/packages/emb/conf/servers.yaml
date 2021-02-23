@@ -1,0 +1,6 @@
+rest: 
+  host: UWKGM_PKG_EMB_REST_HOST
+  port: UWKGM_PKG_EMB_REST_PORT
+train:
+  host: UWKGM_PKG_EMB_TRAIN_HOST
+  port: UWKGM_PKG_EMB_TRAIN_PORT

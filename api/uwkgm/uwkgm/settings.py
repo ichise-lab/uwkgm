@@ -25,7 +25,7 @@ TMP_SECRET_KEY = "5n7u9a_$@r1wbii&ioivkyn#6ay_*7rlhcbqgysc9h*1k#aa%q"
 SECRET_KEY = os.environ['UWKGM_DJANGO_SECRET_KEY'] if 'UWKGM_DJANGO_SECRET_KEY' in os.environ else TMP_SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = ('dev' in os.environ['UWKGM_ENV']) if 'UWKGM_ENV' in os.environ else True
+DEBUG = ('dev' in os.environ['UWKGM_STAGE']) if 'UWKGM_STAGE' in os.environ else True
 
 ALLOWED_HOSTS = ['*']
 
@@ -96,10 +96,10 @@ AUTHENTICATION_BACKENDS = (
 DATABASES = {
     'default': {
         'ENGINE': os.environ['UWKGM_DB_DJANGO_ENGINE'],
-        'NAME': os.path.join(BASE_DIR, os.environ['UWKGM_DB_DJANGO_NAME']),
+        'NAME': os.environ['UWKGM_DB_DJANGO_NAME'],
         'USER': os.environ['UWKGM_DB_DJANGO_USERNAME'] if 'UWKGM_DB_DJANGO_USERNAME' in os.environ else '',
         'PASSWORD': os.environ['UWKGM_DB_DJANGO_PASSWORD'] if 'UWKGM_DB_DJANGO_PASSWORD' in os.environ else '',
-        'HOST': os.environ['UWKGM_DB_DJANGO_ADDRESS'] if 'UWKGM_DB_DJANGO_ADDRESS' in os.environ else 'localhost',
+        'HOST': os.environ['UWKGM_DB_DJANGO_HOST'] if 'UWKGM_DB_DJANGO_HOST' in os.environ else 'localhost',
         'PORT': os.environ['UWKGM_DB_DJANGO_PORT'] if 'UWKGM_DB_DJANGO_PORT' in os.environ else 3306
     }
 }
