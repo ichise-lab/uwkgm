@@ -39,7 +39,7 @@ export const Demo = props => {
             })
         }
 
-        const response = fetch(apiEndpoint + '/accounts/tokens/verify', settings)
+        fetch(apiEndpoint + '/accounts/tokens/verify', settings)
             .then(res => {
                 if (res.status === 200) {
                     let access = decode(code);

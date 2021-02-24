@@ -283,7 +283,7 @@ export const setNodeLabel = (node, selectedNodes, graph, options, caller) => {
     const state = caller.canvasGraph.nodes[node.id];
 
     if (selectedNodes.length > 0) {
-        if (selectedNodes.includes(node.id) || (caller.hoveringNode !== null && caller.hoveringNode.id == node.id)) {
+        if (selectedNodes.includes(node.id) || (caller.hoveringNode !== null && caller.hoveringNode.id === node.id)) {
             return genLabel();
         } else {
             return '';

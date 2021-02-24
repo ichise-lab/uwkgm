@@ -24,8 +24,6 @@ export const request = props => {
     settings.headers['Authorization'] = 'Bearer ' + auth.getTokens().access;
     url.search = new URLSearchParams(params).toString();
 
-    console.log(settings);
-
     var promise = new Promise((resolve, reject) => {
         fetch(url, settings)
             .then(response => {
@@ -37,6 +35,9 @@ export const request = props => {
                     } else {
                         resolve(response);
                     }
+                } else if (response.status === 401) {
+                    auth.logout();
+
                 } else {
                     const message = 'The server responded with an error';
 
@@ -50,6 +51,7 @@ export const request = props => {
                     }).catch(error => {
                         if (passError === undefined || !passError) {
                             alert(message + ': ' + error);
+                            console.log(response);
                         }
 
                         reject({message: message, detail: error, status: response.status, response: response});

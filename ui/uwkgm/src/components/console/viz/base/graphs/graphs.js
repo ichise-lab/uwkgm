@@ -77,9 +77,9 @@ export class GraphsClass extends React.Component {
                         var exist = false;
 
                         for (let n = 0; n < graph.triples.length; n++) {
-                            if (triple.source == graph.triples[n].source &&
-                                triple.predicate == graph.triples[n].predicate &&
-                                triple.target == graph.triples[n].target) {
+                            if (triple.source === graph.triples[n].source &&
+                                triple.predicate === graph.triples[n].predicate &&
+                                triple.target === graph.triples[n].target) {
                                     exist = true;
                                 }
                         }

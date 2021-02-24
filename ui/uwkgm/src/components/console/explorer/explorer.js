@@ -173,7 +173,6 @@ class ExplorerClass extends React.Component {
                 })); 
             }
         }).catch(error => {
-            alert("An error occurred while sending the request: " + error);
             this.setState(() => ({
                 isProcessing: false
             })); 

@@ -140,7 +140,7 @@ export class BaseEntitySearch extends React.Component {
                     }));
                 } else {
                     setTimeout(() => {
-                        if (this.isComponentMounted && search == this.state.search) {
+                        if (this.isComponentMounted && search === this.state.search) {
                             this.setState(() => ({isSearching: true}), () => {
                                 fetchSuggestions(search, getActiveCatalog(this.props.reducers.catalogs).uri).then(data => {
                                     if (this.isComponentMounted && target.value === data.search) {

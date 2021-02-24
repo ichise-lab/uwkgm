@@ -36,7 +36,7 @@ export const Tools = props => {
     const shouldDisableEditButton = () => {
         var shouldDisable = false;
 
-        if (isUserAbsoulteDemo || selectedIds.length == 0) {
+        if (isUserAbsoulteDemo || selectedIds.length === 0) {
             shouldDisable = true;
         } else {
             for (let i = 0; i < selectedIds.length; i++) {
@@ -89,7 +89,7 @@ export const Tools = props => {
                         icon={<FileCopyIcon />} 
                         text={<Language text={content.clone} />} 
                         onClick={onCloneClick}
-                        disabled={isUserAbsoulteDemo || selectedIds.length != 1} 
+                        disabled={isUserAbsoulteDemo || selectedIds.length !== 1} 
                     />
                 </div>
                 <div className={classes.tools.divider} />

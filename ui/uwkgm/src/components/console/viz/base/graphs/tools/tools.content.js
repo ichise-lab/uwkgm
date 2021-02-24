@@ -66,9 +66,6 @@ export const content = {
     commit: {
         en: 'Commit'
     },
-    expand: {
-        en: 'Expand',
-    },
     shrink: {
         en: 'Shrink'
     }

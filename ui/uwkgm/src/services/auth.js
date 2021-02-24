@@ -62,7 +62,7 @@ export const auth = {
         return window.localStorage.getItem('email');
     },
 
-    logout: (snackbar) => {
+    logout: snackbar => {
         window.localStorage.removeItem('access');
         window.localStorage.removeItem('refresh');
         window.localStorage.removeItem('username');
@@ -74,7 +74,9 @@ export const auth = {
         window.localStorage.removeItem('refreshExpires');
         window.localStorage.removeItem('showed_demo_intro');
 
-        snackbar.open('Successfully logged out', 'success', 2000);
+        if (typeof snackbar !== 'undefined') {
+            snackbar.open('Successfully logged out', 'success', 2000);
+        }
     },
 
     getTokens: () => {

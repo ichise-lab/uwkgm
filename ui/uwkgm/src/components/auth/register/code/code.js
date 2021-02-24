@@ -34,7 +34,7 @@ export const Code = props => {
             })
         }
 
-        const response = fetch(apiEndpoint + '/accounts/register/code/apply', settings)
+        fetch(apiEndpoint + '/accounts/register/code/apply', settings)
             .then(res => {
                 if (res.status === 200) {
                     res.json().then((result) => {

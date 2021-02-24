@@ -92,10 +92,6 @@ export const OptionContainerFunc = props => {
 }
 
 export class OptionClass extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-
     handleSectionToggle = index => {
         var opens = this.state.opens;
         opens[index] = !opens[index];

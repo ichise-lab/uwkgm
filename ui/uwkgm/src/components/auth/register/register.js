@@ -72,7 +72,7 @@ export default class Register extends React.Component {
             })
         }
 
-        const response = fetch(apiEndpoint + '/accounts/' + this.state.username + '/register', settings)
+        fetch(apiEndpoint + '/accounts/' + this.state.username + '/register', settings)
             .then(res => {
                 if (res.status === 200) {
                     this.setState(() => ({success: true}));
