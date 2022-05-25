@@ -19,7 +19,7 @@ more-itertools==8.2.0
 murmurhash==1.0.2
 mysql-connector==2.2.9
 mysqlclient==1.4.6
-nltk==3.4.5
+nltk==3.6.6
 numpy==1.21.0
 oauthlib==3.1.0
 plac==1.1.3
