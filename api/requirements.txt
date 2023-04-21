@@ -37,7 +37,7 @@ requests==2.23.0
 six==1.14.0
 spacy==2.2.3
 SPARQLWrapper==1.8.5
-sqlparse==0.3.0
+sqlparse==0.4.4
 srsly==0.2.0
 thinc==7.3.1
 tqdm==4.43.0
